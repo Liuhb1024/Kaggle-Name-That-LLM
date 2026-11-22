@@ -1,0 +1,2 @@
+# Browser-generated local traces can contain transient URLs and response details.
+.playwright-mcp/

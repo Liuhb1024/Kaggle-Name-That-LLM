@@ -1,0 +1,26 @@
+# Browser-generated local traces can contain transient URLs and response details.
+.playwright-mcp/
+
+# Private input data and generated run artifacts.
+data/raw/**
+!data/raw/.gitkeep
+artifacts/**
+!artifacts/.gitkeep
+docs/worklog/kaggle-submission-2026-11-16.md
+.venv/
+.venv-*/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+*.egg-info/
+build/
+dist/
+.env
+.env.*
+!.env.example
+kaggle.json
+access_token
+.DS_Store
