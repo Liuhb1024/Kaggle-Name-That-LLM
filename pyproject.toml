@@ -36,6 +36,7 @@ packages = ["src/ntl_baseline"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["src"]
 addopts = "-ra"
 
 [tool.ruff]

@@ -10,7 +10,8 @@
 2. [比赛介绍](https://www.kaggle.com/competitions/name-that-llm/overview)、[数据说明](https://www.kaggle.com/competitions/name-that-llm/data)、[官方基线](https://www.kaggle.com/code/martynaplomecka/starter-notebook-for-name-that-llm-competition)：原始题目与方法来源。
 3. [运行手册](docs/running.md)：需要亲手操作时再查命令，不用一次执行全部步骤。
 4. [实测复现报告](docs/baseline-reproduction.md)：查看结果、资源和未解决的问题。
-5. [服务器与 Kaggle 工作流](docs/server-workflow.md)：在新机器上跑首版，并了解下一阶段 GPU 实验的目录边界。
+5. [服务器与 Kaggle 工作流](docs/server-workflow.md)：查看 CPU 对照与服务器交付流程。
+6. [V31 Qwen3-8B 单卡推理](docs/v31-single-gpu.md)：核对适配器来源，在 3090 Ti 上测合成样本、锚点、耗时与显存。
 
 ## 项目在做什么
 

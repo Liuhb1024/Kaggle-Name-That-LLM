@@ -1,8 +1,8 @@
 # 服务器首跑与 Kaggle 交付
 
-首版的可运行目标是官方 TF-IDF + LogisticRegression，使用 CPU。3090 Ti 上已在安装的 PyTorch 环境可以继续独立使用，基线不需要它。高分方案 V31 是下一阶段的复现目标，首版没有它的实现或权重。
+CPU 基线留作固定对照。3090 Ti 的首轮实验直接使用独立 PyTorch 环境运行 V31 的 Qwen3-8B 单分支。模型与适配器由服务器从授权来源准备。 [单卡运行与锚点验收](v31-single-gpu.md)
 
-## 在服务器跑首版
+## 可选的 CPU 基线参考
 
 在已有的 clone 执行以下命令。将 `REPLACE_WITH_COMMIT_SHA` 换成已推送的完整 commit SHA，确保运行的是审过的版本。
 
@@ -26,12 +26,12 @@ uv run --offline --locked python scripts/run_offline.py run \
 
 全流程成功后，`artifacts/server-baseline-v1/completed.json` 会出现。先读 `validation/metrics.json`，核对按 prompt 分组的五折结果；复现报告记录过环境差异，服务器的结果应如实保留。[基线复现记录](baseline-reproduction.md)
 
-## 下一阶段的目录与产物
+## 代码与产物目录
 
 | 位置 | 内容 |
 | --- | --- |
 | `src/ntl_baseline/`、`configs/baseline.json` | 官方基线代码与参数，可作为固定对照。 |
-| `src/ntl_repro/`、`configs/v31_single_gpu.toml` | 计划在首条 GPU 分支实现时新增，记录代码、参数和固定资产版本。 |
+| `src/ntl_repro/`、`configs/v31_single_gpu.toml` | V31 plain LoRA 成员的单卡入口、参数与资产指纹。 |
 | `notebooks/` | 从源码生成无执行输出的交付 Notebook，推理逻辑只维护一份。 |
 | `data/raw/` | 本地只读原始数据，每台机器从授权来源取得，Git 忽略。 |
 | `artifacts/<run-id>/` | 本地权重、适配器、OOF、日志和产物清单，Git 忽略；每次运行用新目录。 |

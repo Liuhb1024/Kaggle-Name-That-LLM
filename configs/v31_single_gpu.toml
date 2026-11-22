@@ -1,0 +1,20 @@
+# Kaggle scriptVersionId 372363760. Plain member of the comp_stack ensemble.
+branch = "lora24_claude"
+script_version = 372363760
+checkpoint = "zbigniewkirchner/ntl-qwen3-8b-lora-claude-head/1"
+recommended_base = "qwen-lm/qwen-3/Transformers/8b-base/1"
+batch_size = 1
+
+# SHA-256 from the individual public v1 files, verified without downloading LoRA weights.
+[sha256]
+"COMPLETE.json" = "4a9f1ee827240c221c2e83bc0686df644aa3d16c2cef08e0b5e1e71c463b2a54"
+"adapter/adapter_config.json" = "e37c54313ad1d0886f0f4562e82e7934cea51b9433f7465fca9df9f765fe6176"
+"heads.safetensors" = "79fcbbc4b313450b4580565d5addba4cd769e80f10d5d68a2068e694b50619aa"
+"readouts.npz" = "39d8154724339e7b0fcf307267c588852cc4840ade7c4e59d7077a5cd55ea45b"
+"tokenizer/tokenizer_config.json" = "2e3bd3cb5055f7a903a54e7062b2fd14d21b70f4174c3ffcd9fc81ec50a25631"
+"anchor_features.npz" = "556cfc1a0a64915e99a8338789badb675496b910546cb2d2fdc8a5a9df69c4df"
+"tokenizer/tokenizer.json" = "b3744d3112b8c3d04760859bfdbf9a7ce00d5539512b5fc5d5bfb3f76eec0d9d"
+
+[base_sha256]
+"config.json" = "3bd01d7ad7a2e203ecbbe84e24087a51c6d2a108ee4bcc42d0016bf49564983a"
+"model.safetensors.index.json" = "cd39d5e44c5aadfd1954b598883aea1c4a98822a2f7723d214ef2278b7fec2e4"
