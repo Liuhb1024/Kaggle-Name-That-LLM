@@ -16,6 +16,7 @@ POOL_LAYERS = (2, 4, 6, 8, 12, 16, 20, 24)
 HIDDEN_SIZE = 4096
 FEATURE_SIZE = HIDDEN_SIZE * len(POOL_LAYERS)
 TOKEN_LIMIT = 447
+CLAUDE_LABELS = tuple(label for label in LABELS if label.startswith("claude-"))
 Array = npt.NDArray[np.floating[Any]]
 
 
@@ -44,6 +45,63 @@ def load_readout(path: Path) -> PlainReadout:
     _require_finite(coefficients, (len(LABELS), FEATURE_SIZE), "plain coefficients")
     _require_finite(intercept, (len(LABELS),), "plain intercept")
     return PlainReadout(coefficients, intercept)
+
+
+@dataclass(frozen=True)
+class AuxiliaryReadouts:
+    center: PlainReadout
+    claude: PlainReadout
+
+
+def load_auxiliary_readouts(path: Path) -> AuxiliaryReadouts:
+    with np.load(path, allow_pickle=False) as archive:
+        if tuple(archive["classes"]) != LABELS or tuple(archive["claude_classes"]) != CLAUDE_LABELS:
+            raise ContractError("auxiliary readout class order differs from V31")
+        if tuple(archive["pool_layers"]) != POOL_LAYERS:
+            raise ContractError("auxiliary readout pooling layers differ from V31")
+        center = PlainReadout(archive["center_coef"], archive["center_intercept"])
+        claude = PlainReadout(archive["claude_coef"], archive["claude_intercept"])
+    for name, head, count in (
+        ("center", center, len(LABELS)),
+        ("claude", claude, len(CLAUDE_LABELS)),
+    ):
+        _require_finite(head.coefficients, (count, FEATURE_SIZE), f"{name} coefficients")
+        _require_finite(head.intercept, (count,), f"{name} intercept")
+    return AuxiliaryReadouts(center, claude)
+
+
+def auxiliary_outputs(
+    ids: list[str], features: Array, readouts: AuxiliaryReadouts, groups: list[str] | None
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    if len(ids) != len(features) or len(set(ids)) != len(ids):
+        raise ContractError("auxiliary scores need one unique ID per feature row")
+    claude = _score_frame(ids, _log_softmax(readouts.claude.logits(features)), CLAUDE_LABELS)
+    if groups is None:
+        return claude, _score_frame([], np.empty((0, len(LABELS))), LABELS)
+    if len(groups) != len(ids):
+        raise ContractError("expected one group per feature row")
+    group_rows: dict[str, list[int]] = {}
+    for row, group in enumerate(groups):
+        group_rows.setdefault(group, []).append(row)
+    eligible = [rows for rows in group_rows.values() if 2 <= len(rows) <= 18]
+    centered = features.astype(np.float32, copy=True)
+    for rows in eligible:
+        centered[rows] -= centered[rows].mean(axis=0)
+    rows = sorted(row for group in eligible for row in group)
+    logits = readouts.center.logits(centered[rows])
+    return claude, _score_frame([ids[row] for row in rows], np.exp(_log_softmax(logits)), LABELS)
+
+
+def _score_frame(ids: list[str], values: Array, labels: tuple[str, ...]) -> pd.DataFrame:
+    _require_finite(values, (len(ids), len(labels)), "auxiliary scores")
+    frame = pd.DataFrame(values, columns=labels)
+    frame.insert(0, "id", pd.Series(ids, dtype=object))
+    return frame
+
+
+def _log_softmax(logits: Array) -> Array:
+    shifted = logits - logits.max(axis=1, keepdims=True)
+    return shifted - np.log(np.exp(shifted).sum(axis=1, keepdims=True))
 
 
 def encode_passages(

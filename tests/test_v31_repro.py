@@ -86,6 +86,38 @@ def test_anchor_threshold_and_shape() -> None:
         verify_anchors(saved[:1], saved)
 
 
+def test_auxiliary_readouts_share_features_and_exclude_singletons(tmp_path: Path) -> None:
+    from ntl_repro.branch import auxiliary_outputs, load_auxiliary_readouts
+
+    path = tmp_path / "readouts.npz"
+    claude = tuple(label for label in LABELS if label.startswith("claude-"))
+    center = np.zeros((18, FEATURE_SIZE), dtype=np.float32)
+    center[0, 0] = 1
+    gate = center[:5].copy()
+    np.savez(
+        path,
+        classes=LABELS,
+        claude_classes=claude,
+        pool_layers=POOL_LAYERS,
+        center_coef=center,
+        center_intercept=np.zeros(18),
+        claude_coef=gate,
+        claude_intercept=np.zeros(5),
+    )
+    features = np.zeros((3, FEATURE_SIZE), dtype=np.float32)
+    features[:, 0] = [0, 4, 100]
+    original = features.copy()
+    gate_scores, twin_scores = auxiliary_outputs(
+        ["b", "a", "c"], features, load_auxiliary_readouts(path), ["pair", "pair", "single"]
+    )
+    assert tuple(gate_scores.columns) == ("id", *claude)
+    assert list(gate_scores.id) == ["b", "a", "c"]
+    np.testing.assert_allclose(np.exp(gate_scores.iloc[:, 1:]).sum(axis=1), 1)
+    assert list(twin_scores.id) == ["b", "a"]
+    assert twin_scores.loc[0, LABELS[0]] < 1 / 18 < twin_scores.loc[1, LABELS[0]]
+    np.testing.assert_array_equal(features, original)
+
+
 def test_missing_assets_fail_before_gpu_import(tmp_path: Path) -> None:
     config = load_config(Path("configs/v31_single_gpu.toml"))
     with pytest.raises(ContractError, match="missing|directory"):

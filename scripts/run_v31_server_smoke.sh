@@ -4,9 +4,13 @@ umask 077
 
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.."
 repo=$PWD
+mode=${1:-}
+if [[ "$mode" == --cached-auxiliary ]]; then
+  shift
+fi
 python=${1:-"$repo/../.venv-gpu-check/bin/python"}
 if [[ $# -gt 1 || ! -x "$python" ]]; then
-  printf 'Usage: bash scripts/run_v31_server_smoke.sh /path/to/CUDA PyTorch virtual environment python\n' >&2
+  printf 'Usage: bash scripts/run_v31_server_smoke.sh [--cached-auxiliary] [/path/to/CUDA PyTorch virtual environment python]\n' >&2
   exit 2
 fi
 
@@ -14,6 +18,17 @@ export CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
 export PYTHONPATH="$repo/src"
 export PYTHONUNBUFFERED=1
 export KAGGLEHUB_CACHE="$repo/artifacts/v31-asset-cache"
+
+if [[ "$mode" == --cached-auxiliary ]]; then
+  run_dir="artifacts/v31-claude-heads-$(date -u +%Y%m%dT%H%M%S)-$$"
+  printf 'Completion report: %s/completed.json\n' "$run_dir"
+  HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 "$python" -m ntl_repro.run --synthetic --auxiliary \
+    --base-dir "$KAGGLEHUB_CACHE/models/qwen-lm/qwen-3/Transformers/8b-base/1" \
+    --checkpoint-dir "$KAGGLEHUB_CACHE/datasets/zbigniewkirchner/ntl-qwen3-8b-lora-claude-head/versions/1/final" \
+    --anchor-data-dir data/raw/name-that-llm --run-dir "$run_dir"
+  grep -E 'anchor_relative_error|claude_gate_logprobs|centered_probabilities' "$run_dir/completed.json"
+  exit
+fi
 
 "$python" - <<'PY'
 import sys

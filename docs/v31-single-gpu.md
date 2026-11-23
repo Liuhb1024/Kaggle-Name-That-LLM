@@ -52,4 +52,10 @@ CUDA_VISIBLE_DEVICES=0 HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 PYTHONPATH=src \
 
 在自己有权限的服务器上复核发布方锚点时，保持原版 `train.csv` 行序，向同一命令加 `--anchor-data-dir data/raw/name-that-llm` 并改用新产物目录。程序用头三行复算 pooled features 并要求相对平均绝对误差小于 0.02。若只跑合成样本，报告的 `anchor_relative_error` 为 `null`。要测少量赛事输入，可把 `--synthetic` 换成 `--data-dir data/raw/name-that-llm --limit 3`，命令只读 `test.csv`，锚点参数独立可选。保留完成记录中的行数、锚点误差、预测耗时和显存，作为自己的服务器实验记录。
 
-本次在本地验证合成合同。服务器 CUDA 加载、原始锚点、Kaggle 隐藏测试和集成效果均待实测。单分支合成运行和锚点通过后可以分别记录对应状态。公榜成绩需要日后实际提交取得。
+本地测试验证合成合同；服务器单分支结果见下文。Kaggle 隐藏测试和完整集成仍待实测，公榜成绩需要日后实际提交取得。
+
+## 复用缓存同时验证三个分类头
+
+2026-11-23，用户在 3090 Ti 上完成三条合成样本的首跑，并贴出了三条作者锚点对照结果：相对误差 `0.0010845562210306525`，低于 `0.02`。首跑的 PyTorch 峰值预留显存为 10.19 GiB。
+
+已下载固定权重和官方 `train.csv` 的服务器可以执行 `bash scripts/run_v31_server_smoke.sh --cached-auxiliary`。脚本直接读取现有缓存，复查锚点，用同一次合成样本前向同时输出原 plain 18 类概率、Claude 家族 5 类对数概率和组内中心化 18 类概率。组内中心化使用一对合成样本作为固定组，单条样本不打分；尚未接入 V31 的真实分组和集成权重。

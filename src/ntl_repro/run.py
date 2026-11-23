@@ -16,7 +16,13 @@ import pandas as pd
 from ntl_baseline.constants import ContractError
 from ntl_baseline.data import file_sha256, load_test, read_csv_input, validate_train
 
-from .branch import branch_outputs, load_readout, verify_anchors
+from .branch import (
+    auxiliary_outputs,
+    branch_outputs,
+    load_auxiliary_readouts,
+    load_readout,
+    verify_anchors,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 # Pinnable small files from Kaggle and named weight files from the same release.
@@ -133,7 +139,9 @@ def _run(args: argparse.Namespace) -> None:
     if run_dir.exists():
         raise ContractError("run-dir already exists")
     hashes = check_assets(args.base_dir, args.checkpoint_dir, config)
-    readout = load_readout(args.checkpoint_dir / "readouts.npz")
+    readout_path = args.checkpoint_dir / "readouts.npz"
+    readout = load_readout(readout_path)
+    auxiliary = load_auxiliary_readouts(readout_path) if args.auxiliary else None
 
     import torch
 
@@ -163,13 +171,19 @@ def _run(args: argparse.Namespace) -> None:
 
     torch.cuda.synchronize()
     prediction_started = perf_counter()
-    scores, predictions = branch_outputs(
-        test, readout.logits(extractor(test["text"].tolist(), config.batch_size))
-    )
+    features = extractor(test["text"].tolist(), config.batch_size)
+    scores, predictions = branch_outputs(test, readout.logits(features))
+    outputs = {"probabilities.parquet": scores, "predictions.parquet": predictions}
+    if auxiliary is not None:
+        groups = ["pair", "pair", "single"][: len(test)] if args.synthetic else None
+        gate, twin = auxiliary_outputs(test["id"].tolist(), features, auxiliary, groups)
+        outputs["claude_gate_logprobs.parquet"] = gate
+        if groups is not None:
+            outputs["centered_probabilities.parquet"] = twin
     torch.cuda.synchronize()
     finished_prediction = perf_counter()
     prediction_seconds = finished_prediction - prediction_started
-    for name, frame in (("probabilities.parquet", scores), ("predictions.parquet", predictions)):
+    for name, frame in outputs.items():
         frame.to_parquet(run_dir / name, index=False)
         if not pd.read_parquet(run_dir / name).equals(frame):
             raise ContractError(f"Parquet round trip differs: {name}")
@@ -182,15 +196,20 @@ def _run(args: argparse.Namespace) -> None:
         "checkpoint_source": "zbigniewkirchner/ntl-qwen3-8b-lora-claude-head/1",
         "asset_sha256": hashes,
         "config_sha256": file_sha256(args.config),
-        "outputs_sha256": {
-            name: file_sha256(run_dir / name)
-            for name in ("probabilities.parquet", "predictions.parquet")
-        },
+        "outputs_sha256": {name: file_sha256(run_dir / name) for name in outputs},
         "rows": len(test),
         "synthetic": args.synthetic,
         "classes": list(scores.columns[1:]),
         "batch_size": config.batch_size,
         "anchor_relative_error": anchor,
+        "auxiliary_rows": {
+            name: len(frame)
+            for name, frame in outputs.items()
+            if name not in ("probabilities.parquet", "predictions.parquet")
+        },
+        "centering_groups": "synthetic_fixture"
+        if auxiliary is not None and args.synthetic
+        else None,
         "gpu": torch.cuda.get_device_name(),
         "cuda_build": torch.version.cuda,
         "python": sys.version.split()[0],
@@ -226,6 +245,7 @@ def main() -> None:
     data.add_argument("--synthetic", action="store_true")
     data.add_argument("--data-dir", type=Path)
     parser.add_argument("--anchor-data-dir", type=Path)
+    parser.add_argument("--auxiliary", action="store_true", help="emit the published extra heads")
     parser.add_argument("--base-dir", type=Path, required=True)
     parser.add_argument("--checkpoint-dir", type=Path, required=True)
     parser.add_argument("--config", type=Path, default=ROOT / "configs/v31_single_gpu.toml")
