@@ -59,3 +59,5 @@ CUDA_VISIBLE_DEVICES=0 HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 PYTHONPATH=src \
 2026-11-23，用户在 3090 Ti 上完成三条合成样本的首跑，并贴出了三条作者锚点对照结果：相对误差 `0.0010845562210306525`，低于 `0.02`。首跑的 PyTorch 峰值预留显存为 10.19 GiB。
 
 已下载固定权重和官方 `train.csv` 的服务器可以执行 `bash scripts/run_v31_server_smoke.sh --cached-auxiliary`。脚本直接读取现有缓存，复查锚点，用同一次合成样本前向同时输出原 plain 18 类概率、Claude 家族 5 类对数概率和组内中心化 18 类概率。组内中心化使用一对合成样本作为固定组，单条样本不打分；尚未接入 V31 的真实分组和集成权重。
+
+执行 `bash scripts/run_v31_server_smoke.sh --cached-preview`，用官方训练集中除锚点所涉 prompt 外的前 12 个完整 prompt，比较 plain 和三头融合的输出。融合使用固定 Notebook 的 plain 权重 `0.177`、中心化权重 `0.15` 和保留 Claude 家族总概率的条件门控。这里只融合已移植的分支；分组使用官方训练标签中的 `prompt_id`，不能代替原版以 GLM4-9B 表示加文本距离推断测试分组的逻辑。该 GLM 附件的公开 API 在核对时返回 403。训练文本可能已被上游模型或读出头使用，两项 balanced accuracy 仅为带标签的功能预览，不能作为无偏验证或排行榜结果。

@@ -124,6 +124,36 @@ def test_missing_assets_fail_before_gpu_import(tmp_path: Path) -> None:
         check_assets(tmp_path, tmp_path, config)
 
 
+def test_branch_fusion_preserves_claude_mass_when_applying_gate() -> None:
+    from ntl_repro.branch import CLAUDE_LABELS, fuse_claude_branch
+
+    plain = pd.DataFrame(np.full((2, 18), 1 / 18), columns=LABELS)
+    plain.insert(0, "id", ["a", "b"])
+    centered = plain.iloc[[1]].copy()
+    centered.loc[:, LABELS] = np.full((1, 18), 1 / 18)
+    gate = pd.DataFrame(np.tile([-5.0, -5.0, -5.0, -5.0, 0.0], (2, 1)), columns=CLAUDE_LABELS)
+    gate.insert(0, "id", ["b", "a"])
+    fused = fuse_claude_branch(plain, centered, gate)
+    assert list(fused.id) == ["a", "b"]
+    np.testing.assert_allclose(fused.loc[:, CLAUDE_LABELS].sum(axis=1), 5 / 18)
+    np.testing.assert_allclose(fused.iloc[:, 1:].sum(axis=1), 1)
+    assert (fused[CLAUDE_LABELS[-1]] > fused[CLAUDE_LABELS[0]]).all()
+
+
+def test_labeled_preview_keeps_whole_groups_and_excludes_anchor_prompts() -> None:
+    from ntl_repro.run import labeled_preview
+
+    source = pd.DataFrame(
+        {
+            "id": list("abcde"),
+            "text": list("abcde"),
+            "model": [LABELS[0]] * 5,
+            "prompt_id": ["anchor", "anchor", "anchor", "other", "other"],
+        }
+    )
+    assert list(labeled_preview(source, 1).id) == ["d", "e"]
+
+
 def test_cli_failure_preserves_existing_run(tmp_path: Path, monkeypatch, capsys) -> None:
     from ntl_repro import run
 

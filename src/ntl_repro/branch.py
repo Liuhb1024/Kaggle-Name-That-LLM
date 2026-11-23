@@ -104,6 +104,36 @@ def _log_softmax(logits: Array) -> Array:
     return shifted - np.log(np.exp(shifted).sum(axis=1, keepdims=True))
 
 
+def fuse_claude_branch(
+    plain: pd.DataFrame, centered: pd.DataFrame, gate: pd.DataFrame
+) -> pd.DataFrame:
+    ids = plain["id"].tolist()
+    if (
+        tuple(plain.columns) != ("id", *LABELS)
+        or tuple(centered.columns) != ("id", *LABELS)
+        or tuple(gate.columns) != ("id", *CLAUDE_LABELS)
+        or any(frame["id"].duplicated().any() for frame in (plain, centered, gate))
+        or set(gate["id"]) != set(ids)
+        or not set(centered["id"]).issubset(ids)
+    ):
+        raise ContractError("fusion outputs do not align by ID and class")
+    logits = 0.177 * np.log(np.clip(plain.iloc[:, 1:].to_numpy(dtype=np.float64), 1e-9, 1.0))
+    positions = {record: row for row, record in enumerate(ids)}
+    rows = [positions[record] for record in centered["id"]]
+    logits[rows] += 0.15 * np.log(
+        np.clip(centered.iloc[:, 1:].to_numpy(dtype=np.float64), 1e-9, 1.0)
+    )
+    columns = [LABELS.index(label) for label in CLAUDE_LABELS]
+    base = logits[:, columns]
+    conditional = _log_softmax(base)
+    ranked = np.sort(np.exp(conditional), axis=1)
+    strength = 0.45 * np.clip(1.0 - (ranked[:, -1] - ranked[:, -2]) / 0.45, 0, 1)
+    guide = _log_softmax(gate.set_index("id").loc[ids].to_numpy(dtype=np.float64))
+    mixed = _log_softmax(conditional * (1 - strength[:, None]) + guide * strength[:, None])
+    logits[:, columns] = (base[:, :1] - conditional[:, :1]) + mixed
+    return _score_frame(ids, np.exp(_log_softmax(logits)), LABELS)
+
+
 def encode_passages(
     tokenizer: Callable[..., dict[str, list[list[int]]]], texts: list[str], eos_id: int
 ) -> list[list[int]]:

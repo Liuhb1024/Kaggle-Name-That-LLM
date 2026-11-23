@@ -5,12 +5,12 @@ umask 077
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.."
 repo=$PWD
 mode=${1:-}
-if [[ "$mode" == --cached-auxiliary ]]; then
+if [[ "$mode" == --cached-auxiliary || "$mode" == --cached-preview ]]; then
   shift
 fi
 python=${1:-"$repo/../.venv-gpu-check/bin/python"}
 if [[ $# -gt 1 || ! -x "$python" ]]; then
-  printf 'Usage: bash scripts/run_v31_server_smoke.sh [--cached-auxiliary] [/path/to/CUDA PyTorch virtual environment python]\n' >&2
+  printf 'Usage: bash scripts/run_v31_server_smoke.sh [--cached-auxiliary | --cached-preview] [/path/to/CUDA PyTorch virtual environment python]\n' >&2
   exit 2
 fi
 
@@ -19,14 +19,21 @@ export PYTHONPATH="$repo/src"
 export PYTHONUNBUFFERED=1
 export KAGGLEHUB_CACHE="$repo/artifacts/v31-asset-cache"
 
-if [[ "$mode" == --cached-auxiliary ]]; then
-  run_dir="artifacts/v31-claude-heads-$(date -u +%Y%m%dT%H%M%S)-$$"
+if [[ "$mode" == --cached-auxiliary || "$mode" == --cached-preview ]]; then
+  if [[ "$mode" == --cached-preview ]]; then
+    inputs=(--preview-prompts 12)
+    run_kind=preview
+  else
+    inputs=(--synthetic --auxiliary)
+    run_kind=heads
+  fi
+  run_dir="artifacts/v31-claude-$run_kind-$(date -u +%Y%m%dT%H%M%S)-$$"
   printf 'Completion report: %s/completed.json\n' "$run_dir"
-  HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 "$python" -m ntl_repro.run --synthetic --auxiliary \
+  HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 "$python" -m ntl_repro.run "${inputs[@]}" \
     --base-dir "$KAGGLEHUB_CACHE/models/qwen-lm/qwen-3/Transformers/8b-base/1" \
     --checkpoint-dir "$KAGGLEHUB_CACHE/datasets/zbigniewkirchner/ntl-qwen3-8b-lora-claude-head/versions/1/final" \
     --anchor-data-dir data/raw/name-that-llm --run-dir "$run_dir"
-  grep -E 'anchor_relative_error|claude_gate_logprobs|centered_probabilities' "$run_dir/completed.json"
+  grep -E 'anchor_relative_error|claude_gate_logprobs|centered_probabilities|balanced_accuracy|peak_cuda_reserved_bytes|prediction_seconds' "$run_dir/completed.json"
   exit
 fi
 

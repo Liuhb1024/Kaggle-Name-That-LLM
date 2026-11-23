@@ -13,12 +13,13 @@ from time import perf_counter
 import numpy as np
 import pandas as pd
 
-from ntl_baseline.constants import ContractError
+from ntl_baseline.constants import LABELS, ContractError
 from ntl_baseline.data import file_sha256, load_test, read_csv_input, validate_train
 
 from .branch import (
     auxiliary_outputs,
     branch_outputs,
+    fuse_claude_branch,
     load_auxiliary_readouts,
     load_readout,
     verify_anchors,
@@ -115,10 +116,29 @@ def check_assets(base: Path, checkpoint: Path, config: Config) -> dict[str, dict
     }
 
 
+def labeled_preview(train: pd.DataFrame, count: int) -> pd.DataFrame:
+    prompts = train["prompt_id"]
+    available = prompts[~prompts.isin(prompts.head(3))].drop_duplicates()
+    if len(available) < count:
+        raise ContractError("not enough complete prompts outside the anchor prompts")
+    return train.loc[prompts.isin(available.head(count))].reset_index(drop=True)
+
+
 def _run(args: argparse.Namespace) -> None:
     config = load_config(args.config)
-    test = (
-        pd.DataFrame(
+    train = (
+        validate_train(read_csv_input(args.anchor_data_dir, "train.csv"))
+        if args.anchor_data_dir is not None
+        else None
+    )
+    preview = None
+    if args.preview_prompts is not None:
+        if train is None:
+            raise ContractError("labeled preview requires the original training CSV")
+        preview = labeled_preview(train, args.preview_prompts)
+        test = preview[["id", "text"]]
+    elif args.synthetic:
+        test = pd.DataFrame(
             {
                 "id": ["synthetic-002", "synthetic-001", "synthetic-003"],
                 "text": [
@@ -128,9 +148,8 @@ def _run(args: argparse.Namespace) -> None:
                 ],
             }
         )
-        if args.synthetic
-        else load_test(args.data_dir)
-    )
+    else:
+        test = load_test(args.data_dir)
     if args.limit is not None:
         test = test.head(args.limit)
     run_dir = args.run_dir.resolve()
@@ -141,7 +160,9 @@ def _run(args: argparse.Namespace) -> None:
     hashes = check_assets(args.base_dir, args.checkpoint_dir, config)
     readout_path = args.checkpoint_dir / "readouts.npz"
     readout = load_readout(readout_path)
-    auxiliary = load_auxiliary_readouts(readout_path) if args.auxiliary else None
+    auxiliary = (
+        load_auxiliary_readouts(readout_path) if args.auxiliary or preview is not None else None
+    )
 
     import torch
 
@@ -150,10 +171,7 @@ def _run(args: argparse.Namespace) -> None:
     if not torch.cuda.is_available() or torch.cuda.device_count() != 1:
         raise ContractError("expose exactly one CUDA GPU for inference")
 
-    anchor_texts = None
-    if args.anchor_data_dir is not None:
-        train = validate_train(read_csv_input(args.anchor_data_dir, "train.csv"))
-        anchor_texts = train["text"].head(3).tolist()
+    anchor_texts = train["text"].head(3).tolist() if train is not None else None
 
     run_dir.mkdir(parents=True, exist_ok=False)
     torch.backends.cuda.matmul.allow_fp16_reduced_precision_reduction = False
@@ -174,12 +192,34 @@ def _run(args: argparse.Namespace) -> None:
     features = extractor(test["text"].tolist(), config.batch_size)
     scores, predictions = branch_outputs(test, readout.logits(features))
     outputs = {"probabilities.parquet": scores, "predictions.parquet": predictions}
+    preview_metrics = None
+    grouping = None
     if auxiliary is not None:
         groups = ["pair", "pair", "single"][: len(test)] if args.synthetic else None
+        if preview is not None:
+            groups = preview["prompt_id"].tolist()
+            grouping = "official_train_prompt_ids"
+        elif args.synthetic:
+            grouping = "synthetic_fixture"
         gate, twin = auxiliary_outputs(test["id"].tolist(), features, auxiliary, groups)
         outputs["claude_gate_logprobs.parquet"] = gate
         if groups is not None:
             outputs["centered_probabilities.parquet"] = twin
+        if preview is not None:
+            fused = fuse_claude_branch(scores, twin, gate)
+            fused_pred = np.asarray(LABELS)[fused.iloc[:, 1:].to_numpy().argmax(axis=1)]
+            truth = preview["model"].to_numpy()
+            preview_metrics = {
+                "prompts": args.preview_prompts,
+                "classes_present": int(preview["model"].nunique()),
+                "plain_balanced_accuracy": float(
+                    pd.Series(predictions["model"].to_numpy() == truth).groupby(truth).mean().mean()
+                ),
+                "fused_balanced_accuracy": float(
+                    pd.Series(fused_pred == truth).groupby(truth).mean().mean()
+                ),
+            }
+            outputs["fused_probabilities.parquet"] = fused
     torch.cuda.synchronize()
     finished_prediction = perf_counter()
     prediction_seconds = finished_prediction - prediction_started
@@ -207,9 +247,8 @@ def _run(args: argparse.Namespace) -> None:
             for name, frame in outputs.items()
             if name not in ("probabilities.parquet", "predictions.parquet")
         },
-        "centering_groups": "synthetic_fixture"
-        if auxiliary is not None and args.synthetic
-        else None,
+        "centering_groups": grouping,
+        "labeled_preview": preview_metrics,
         "gpu": torch.cuda.get_device_name(),
         "cuda_build": torch.version.cuda,
         "python": sys.version.split()[0],
@@ -244,6 +283,7 @@ def main() -> None:
     data = parser.add_mutually_exclusive_group(required=True)
     data.add_argument("--synthetic", action="store_true")
     data.add_argument("--data-dir", type=Path)
+    data.add_argument("--preview-prompts", type=int)
     parser.add_argument("--anchor-data-dir", type=Path)
     parser.add_argument("--auxiliary", action="store_true", help="emit the published extra heads")
     parser.add_argument("--base-dir", type=Path, required=True)
@@ -254,6 +294,10 @@ def main() -> None:
     args = parser.parse_args()
     if args.limit is not None and args.limit < 1:
         parser.error("--limit must be positive")
+    if args.preview_prompts is not None and (
+        not 1 <= args.preview_prompts <= 12 or args.limit is not None
+    ):
+        parser.error("--preview-prompts must be 1–12 and cannot be combined with --limit")
     try:
         _run(args)
     except ContractError as exc:
