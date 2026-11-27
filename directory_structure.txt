@@ -35,6 +35,7 @@ docs/worklog/findings.md
 docs/worklog/progress.md
 docs/worklog/task_plan.md
 notebooks/official_baseline.ipynb
+notebooks/v31_plain.ipynb
 pyproject.toml
 requirements-v31-gpu.txt
 requirements.txt
@@ -57,6 +58,7 @@ src/ntl_baseline/workflow.py
 src/ntl_repro/__init__.py
 src/ntl_repro/branch.py
 src/ntl_repro/gpu.py
+src/ntl_repro/notebook.py
 src/ntl_repro/run.py
 tests/conftest.py
 tests/test_baseline.py
@@ -64,6 +66,7 @@ tests/test_contracts.py
 tests/test_notebook.py
 tests/test_repository_guard.py
 tests/test_safety.py
+tests/test_v31_notebook.py
 tests/test_v31_repro.py
 tests/test_v31_server_smoke.py
 tests/test_workflow.py
