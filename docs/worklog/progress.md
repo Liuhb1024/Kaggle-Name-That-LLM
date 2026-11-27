@@ -58,3 +58,7 @@
 - 关闭本轮 Playwright 创建的 11 个研究标签，回读 tab list 仅剩初始 about:blank。没有操作用户原有 Chrome 标签。
 - 最终命令：git diff --check；shasum -a 256 .gitignore README.md docs/competition-brief.md docs/engineering-plan.md findings.md progress.md task_plan.md > research-manifest-2026-11-15.sha256；shasum -a 256 -c research-manifest-2026-11-15.sha256。manifest 是本轮新增文件的首次摘要，不替换既有历史哈希；不包括原始浏览器 traces。
 - 上述首次摘要检查 7/7 OK。随后 planning-with-files/check-complete.sh 报 0/0：脚本只识别 `### Phase` 与 `**Status:**`，不识别原中文列表。已将计划状态改为其支持的格式，未改变实际完成条件。保留首次 manifest 作为先前快照；当前文件摘要另存 research-manifest-2026-11-15-v2.sha256，首次 manifest 不作为当前工作区校验入口。最终重新运行 check-complete.sh、git diff --check 和 v2 shasum 校验。
+
+## 2026-11-28 A1
+
+用户确认按 Opus 规格启动。在独立工作树保留 v31_plain 原有六项改动并实现 q8pool。数据审计去掉基于官方标签的 F11 训练过滤。完整 V31 原源码、公开池原文、适配器和执行证据保存在私有运行目录。正式 GPU 训练、Kaggle 保存运行和正式提交分别记录证据。[规格](../specs/member-q8pool-v1.md) · [运行手册](../member-q8pool.md)

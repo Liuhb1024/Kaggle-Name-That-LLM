@@ -1,0 +1,112 @@
+{
+  "files": {
+    "ntl_open_pool.parquet": {
+      "dataset": "crtproduction/name-that-llm-open-pool",
+      "version": 19,
+      "bytes": 119227255,
+      "sha256": "fe6ece20e6f9f2fe5fb3c47f2aaa9749394c1056bc688a8eab865e0dc2bb56df"
+    },
+    "source_protocol.csv": {
+      "dataset": "crtproduction/name-that-llm-open-pool",
+      "version": 19,
+      "bytes": 26447,
+      "sha256": "aad5be493cad260eb365d685c817dac961feb321257dd1e25afe1e6988ecc95e"
+    },
+    "ntl_extra_passages_claude.csv": {
+      "dataset": "seyitkaangunes/ntl-extra-api-passages",
+      "version": 2,
+      "bytes": 4387162,
+      "sha256": "710dbe484fda23f0dee9b67c20e5bef9376bf754af05584ad142bc17845cd4b9"
+    },
+    "spot/abdullah1afify/ntl-generations/ntl_fal_paid.csv": {
+      "dataset": "abdullah1afify/ntl-generations",
+      "version": 11,
+      "bytes": 3170417,
+      "sha256": "8fe4b8cd51653006d064594842488df3537d9469e555d83f885bb5a44de8f5a1"
+    },
+    "spot/abdullah1afify/ntl-generations/ntl_generations.csv": {
+      "dataset": "abdullah1afify/ntl-generations",
+      "version": 11,
+      "bytes": 4637223,
+      "sha256": "f1776e378bbc01be6e33a0c7a10fca5d907286101e3abb48dd70823384982f64"
+    },
+    "spot/arxitekton/ntl-claude-gen-v1/passages.csv": {
+      "dataset": "arxitekton/ntl-claude-gen-v1",
+      "version": 1,
+      "bytes": 10689272,
+      "sha256": "3b39b563edf415f0c8f34a5a95d8fd2fd8cbcce05c8c800d9ad72cc1872b759a"
+    },
+    "spot/abdullah1afify/ntl-generations/ntl_claude_plain.csv": {
+      "dataset": "abdullah1afify/ntl-generations",
+      "version": 11,
+      "bytes": 4223333,
+      "sha256": "e886f6f175a7109d2748d56ba6864e6dc465063ddfcf9b5363895c35e02ec4d9"
+    },
+    "spot/trnhip/ntl-api-gen/passages.csv": {
+      "dataset": "trnhip/ntl-api-gen",
+      "version": 6,
+      "bytes": 14143791,
+      "sha256": "5536d451a29890450f50e309d4d2e05600b11523799aeed65ff5f43158b7d4e7"
+    },
+    "spot/tadeuhayashida/ntl-gen003-claude-panel/ntl_gen003_claude_panel.parquet": {
+      "dataset": "tadeuhayashida/ntl-gen003-claude-panel",
+      "version": 1,
+      "bytes": 3040121,
+      "sha256": "5c0e88c30d85e2f245756be72a4a04e449ca5cfb688f6bd799a3d66686786f10"
+    },
+    "spot/tadeuhayashida/ntl-claude-fable-5-generations/gen001_claude_fable_5_filtered.parquet": {
+      "dataset": "tadeuhayashida/ntl-claude-fable-5-generations",
+      "version": 1,
+      "bytes": 792923,
+      "sha256": "90608a7ae087afef2a415073682b61ade26993841f0fb3ca06951ea6f4c056e0"
+    },
+    "spot/alperen5252525/ntl-vertex-gemini-proxy-gpt-generations/ntl_alp_generations.csv": {
+      "dataset": "alperen5252525/ntl-vertex-gemini-proxy-gpt-generations",
+      "version": 2,
+      "bytes": 4459227,
+      "sha256": "3b4a5868310495f74cd76890ddcd6cac3f4eb392bb1791aafb62362d332742a5"
+    },
+    "spot/tadeuhayashida/ntl-claude-fable-5-generations/gen001_claude_fable_5_raw_all_templates.parquet": {
+      "dataset": "tadeuhayashida/ntl-claude-fable-5-generations",
+      "version": 1,
+      "bytes": 1044757,
+      "sha256": "ab62a43cb15a1b958bce840a5ded120c15dbf4a165ec8d21971203381c65b41c"
+    },
+    "spot/lxdlxdlxd/ntl-synth-generations-v1/generations.csv": {
+      "dataset": "lxdlxdlxd/ntl-synth-generations-v1",
+      "version": 1,
+      "bytes": 5742374,
+      "sha256": "8339081afee1d4aed0b806a686d91978f0d7815bc67fb8f620860477e0895675"
+    },
+    "spot/harshitkmr/ntl-google-gen-v1/google_gen_v1.csv": {
+      "dataset": "harshitkmr/ntl-google-gen-v1",
+      "version": 1,
+      "bytes": 20298476,
+      "sha256": "195e233b980bbc99fd3b642127c0a0df10991880b88a9ee9adfe8bcf31209307"
+    },
+    "spot/drjcfmd/ntl-generated-v2/train_ext3.csv": {
+      "dataset": "drjcfmd/ntl-generated-v2",
+      "version": 4,
+      "bytes": 19102011,
+      "sha256": "54deff7fc81cca075dd3e849cc9bd9d95166748f33dbe1af3992368489f45837"
+    },
+    "spot/drjcfmd/ntl-generated-v2/train_ext.csv": {
+      "dataset": "drjcfmd/ntl-generated-v2",
+      "version": 4,
+      "bytes": 12994838,
+      "sha256": "a87b314592dee7ce0899db578a560f8d5fb4e73c7ba80afd094bb807c0571be0"
+    },
+    "source_metadata.json": {
+      "bytes": 14325,
+      "sha256": "5a518f40ec27e9f57e886c5468cf1f4a2ff03b5ad29c236462b98a48bda56a7a"
+    },
+    "spot_plan.json": {
+      "bytes": 455,
+      "sha256": "655a9515797bae9ec4a7823d5f453a578e09fd062826372a0e6373917310892f"
+    }
+  },
+  "versions": {
+    "crtproduction/name-that-llm-open-pool": 19,
+    "seyitkaangunes/ntl-extra-api-passages": 2
+  }
+}

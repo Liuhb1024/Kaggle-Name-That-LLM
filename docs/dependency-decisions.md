@@ -41,3 +41,7 @@ uv.lock 固定生产和开发解析；requirements.txt 从锁文件导出生产�
 - [sklearn 模型保存](https://scikit-learn.org/1.6/model_persistence.html)：格式比较、可信来源与同版本要求。
 
 没有新增 Git hook、后台服务、Kaggle 凭据、训练 API 或云端写入。
+
+## 2026-11-28 的 A1 GPU 环境
+
+V31 固定版 infer.py 导入 SciPy 和 scikit-learn，服务器需要直接运行该源码来测精度对齐。重写向量化和分组路径会使参考实现与待测实现同时发生变化。GPU 专用清单采用与现有 CPU 锁文件一致的 scikit-learn 1.6.1、SciPy 1.15.3。核对过固定版本的发行元数据和分发文件，两者随发行版提供 BSD 许可及二进制归属说明。首次准备 CPU 环境时复用已有 uv；缺少 uv 时在私有工具虚拟环境内安装 0.11.12。CPU 项目依赖锁保持原版本。[scikit-learn](https://pypi.org/project/scikit-learn/1.6.1/) · [SciPy](https://pypi.org/project/scipy/1.15.3/) · [uv](https://pypi.org/project/uv/0.11.12/)

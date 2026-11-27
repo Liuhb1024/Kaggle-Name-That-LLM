@@ -54,3 +54,27 @@ def test_guard_rejects_assets_outside_ignored_directories(guard, relative):
 def test_guard_patterns_do_not_match_their_own_definitions(guard):
     script = Path(__file__).resolve().parents[1] / "scripts/check_repository.py"
     assert guard.SENSITIVE_PATTERNS.search(script.read_text()) is None
+
+
+@pytest.mark.parametrize(
+    "name, content",
+    [
+        ("unreviewed.md", "# Logs\n\nA sample"),
+        ("stdout.log", "This is a sample"),
+        ("summary.md", "Hand-edited \n"),
+    ],
+)
+def test_q8_public_directory_refuses_unchecked_text(guard, name, content):
+    path = guard.ROOT / "reports/member-q8pool-v1" / name
+    path.parent.mkdir(parents=True)
+    path.write_text(content)
+    with pytest.raises(SystemExit, match="public report"):
+        guard.main()
+
+
+def test_other_json_report_checks_recursive_fields_and_paths(guard):
+    path = guard.ROOT / "reports/other-result.json"
+    path.parent.mkdir()
+    path.write_text('{"nested":[{"prompt_id":"private"}],"work":"/home/fixture"}')
+    with pytest.raises(SystemExit, match="public report"):
+        guard.main()

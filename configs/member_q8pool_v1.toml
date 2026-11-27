@@ -1,0 +1,87 @@
+run_name = "member-q8pool-v1"
+seed = 0
+
+[pins]
+v31_json_sha256 = "1556c5110b52c917144cd961610f2fc6fd803d4c3982b4e6d2e977273eb9038d"
+base_handle = "qwen-lm/qwen-3/Transformers/8b-base/1"
+open_pool = "crtproduction/name-that-llm-open-pool/versions/19"
+extra_api = "seyitkaangunes/ntl-extra-api-passages/versions/2"
+folds_digest = "ff3453131989daf2379816eef5ed02086ec0a6488e20815d0bd2ef35c1c40193"
+source_lock = "configs/member_q8pool_sources_v1.json"
+
+[filters]
+min_words = 36
+max_words = 275
+gemini_drift_cutoff = "2026-11-01"
+kimi_reasoning = ["high"]
+near_dup_char_cosine = 0.80
+prompt_centroid_cosine = 0.50
+typography_never_max_count = 1
+spot_check_rows = 200
+spot_check_max_mismatch = 0.02
+allowed_licenses = ["CC BY 4.0", "CC BY-SA 4.0", "CC0 1.0"]
+approved_readme_license_sources = []
+
+[sampling]
+per_class_cap = 6000
+fallback_per_class_cap = 4000
+
+[model]
+keep_layers = 24
+pool_layers = [2, 4, 6, 8, 12, 16, 20, 24]
+max_len = 384
+append_eos = false
+lora_r = 16
+lora_alpha = 32
+lora_dropout = 0.05
+target_modules = ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
+
+[train]
+token_budgets = [8192, 6144, 4096]
+min_rows_per_step = 64
+weight_decay = 0.01
+warmup_ratio = 0.05
+grad_clip = 1.0
+stage1 = { epochs = 1, lr_lora = 1e-4, lr_head = 1e-3, checkpoint_every = 500 }
+stage2 = { epochs = 2, lr_lora = 5e-5, lr_head = 5e-4, prompts_per_step = 2 }
+control = { epochs = 3, lr_lora = 1e-4, lr_head = 1e-3, prompts_per_step = 2 }
+
+[gates]
+smoke_peak_reserved_gib = 21.0
+smoke_max_projected_stage1_hours = 10.0
+data_min_rows_per_class = 1000
+data_stop_rows_per_class = 500
+data_stop_class_count = 3
+s1_continue = 0.50
+s1_stop = 0.45
+s2_min = 0.56
+s2_minus_control_min = 0.05
+s2_minus_control_ci_low = 0.02
+parity_argmax_agreement = 0.995
+parity_ba_diff = 0.003
+parity_mean_abs_logp = 0.02
+precision_ba_diff = 0.005
+anchor_abs_logp = 0.05
+
+[evaluation]
+bootstrap_resamples = 10000
+pair_replicates = 20
+length_bins = [36, 65, 102, 158, 275]
+
+[kaggle]
+dataset_handle = "huabi1024/ntl-q8pool-member-v1"
+member_name = "q8pool"
+weight = 2.0
+twin = 0.35
+gauss = 0.44
+batch_size = 16
+
+[integrity]
+official_train = "40a22ce8d88c5f46feb4637a099db815bef5f713ffe53e89dbe1b7b21de77707"
+shards = [
+  "9983f1b9ef2f60e7c3730d9bc11ada914e6ec630639b5b020a89bd158cd0446b",
+  "9aa12339835bf7a093d3d0b0a0d2d77f8538301cfc7f8e7ec7a585858ebf7a1f",
+  "c7dd5a191c8da555def0714550375b3c0117751add408fcdda0c2a79ac0186bc",
+  "ad8b708792105133e03fe19e2d56c89c709f677f01285f8b3ede8947d59fd9fe",
+  "fbf24915d47ea030bb68ab0b9488f4515a907185baa6dc26837c9c3f2326a550",
+]

@@ -103,3 +103,5 @@ git diff --check
 仓库Notebook从同一包源码生成；挂接Name That LLM competition input，选CPU（Accelerator None）、关闭Internet、保持Private，再Save & Run All。平台提交会再次保存版本并在隐藏test上重跑，不能将本地3行预测直接上传代替。Notebook显式使用`require_sample=False`，只依赖train/test；公开样例不能限定隐藏test的id。最终submission.parquet仍按实际test完整校验。默认CLI及归档导入仍要求三个文件且严格校验样例。
 
 首次平台运行、失败和修复重试均由代理执行，见[提交摘要](worklog/baseline-submission-summary.md)。不自动重复提交，也不根据分数改参数。
+
+A1 的服务器命令、续跑、私有成员资产与离线 Kaggle 交接见 [q8pool 运行手册](member-q8pool.md)。

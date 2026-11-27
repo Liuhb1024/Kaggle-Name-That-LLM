@@ -5,9 +5,10 @@ This is a targeted check, not a general vulnerability or full secret audit.
 """
 
 import hashlib
+import json
 import re
 import subprocess
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 ROOT = Path(__file__).resolve().parents[1]
 SENSITIVE_PATTERNS = re.compile(
@@ -41,6 +42,21 @@ ASSET_EXTENSIONS = {
 }
 
 
+def private_report_field(value: object) -> bool:
+    if isinstance(value, dict):
+        return any(
+            k in {"text", "id", "prompt_id", "prompt_canon"}
+            or private_report_field(k)
+            or private_report_field(v)
+            for k, v in value.items()
+        )
+    if isinstance(value, list):
+        return any(private_report_field(item) for item in value)
+    return isinstance(value, str) and (
+        value.startswith(("/", "~/")) or PureWindowsPath(value).is_absolute()
+    )
+
+
 def main() -> None:
     result = subprocess.run(
         ["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z"],
@@ -65,8 +81,23 @@ def main() -> None:
             env_file and path.name != ".env.example"
         ):
             failures.append(f"Credential filename is Git-visible: {relative}")
+        if relative.parts[:2] == ("reports", "member-q8pool-v1"):
+            from ntl_member.report import check_file
+
+            try:
+                if len(relative.parts) != 3:
+                    raise ValueError("unexpected subdirectory")
+                check_file(path)
+            except (OSError, ValueError, TypeError, KeyError, AttributeError):
+                failures.append(f"Invalid public report: {relative}")
         if path.suffix in {".py", ".md", ".json", ".toml", ".ipynb"}:
             text = path.read_text(encoding="utf-8")
+            if relative.parts[0] == "reports" and path.suffix == ".json":
+                try:
+                    if private_report_field(json.loads(text)):
+                        failures.append(f"Private field in public report: {relative}")
+                except ValueError:
+                    failures.append(f"Invalid public report JSON: {relative}")
             if SENSITIVE_PATTERNS.search(text):
                 failures.append(f"Selected secret/temporary-URL pattern found in {relative}")
             if path.suffix == ".md":

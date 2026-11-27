@@ -49,7 +49,7 @@ select = ["E", "F", "I", "UP", "B"]
 
 [tool.mypy]
 python_version = "3.11"
-files = ["src/ntl_baseline"]
+files = ["src/ntl_baseline", "src/ntl_member"]
 check_untyped_defs = true
 disallow_untyped_defs = true
 ignore_missing_imports = true

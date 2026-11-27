@@ -13,6 +13,8 @@
 5. [服务器与 Kaggle 工作流](docs/server-workflow.md)：查看 CPU 对照与服务器交付流程。
 6. [V31 Qwen3-8B 单卡推理](docs/v31-single-gpu.md)：核对适配器来源，在 3090 Ti 上测合成样本、锚点、耗时与显存。
 
+7. [q8pool 单卡训练与提交](docs/member-q8pool.md)：完整 V31 更换成员的独立实验。
+
 ## 项目在做什么
 
 训练时，CSV提供文字和来源模型标签。程序用词与字符片段的TF-IDF将文字变成数字，再用逻辑回归学习区分类别。推理时读入没有标签的test.csv，生成id/model两列的submission.parquet。
@@ -39,6 +41,9 @@ Kaggle-Name-That-LLM/
 │   ├── artifacts.py                # 结果保存与哈希
 │   ├── notebook.py                 # Notebook生成逻辑
 │   └── __init__.py                 # 包标识
+├── configs/member_q8pool_v1.toml    # A1 预登记配方与门槛
+├── src/ntl_member/                 # 公开数据审计、单卡训练和 V31 成员导出
+├── src/ntl_repro/                  # 已有 V31 单分支推理实现
 ├── tests/                          # 合成数据测试，不含比赛原文
 ├── scripts/                        # 生成、离线执行、官方对照与检查
 ├── notebooks/official_baseline.ipynb # 生成的Kaggle交付文件，最后再读
@@ -48,6 +53,8 @@ Kaggle-Name-That-LLM/
 ├── artifacts/                      # 本地模型、OOF、运行结果，Git忽略
 ├── docs/
 │   ├── learning-guide.md           # 学习入口与模块地图
+│   ├── specs/member-q8pool-v1.md   # Opus 的 A1 规格
+│   ├── member-q8pool.md            # A1 运行与交接
 │   ├── running.md                  # 命令手册
 │   ├── server-workflow.md           # 服务器首跑和模型交付边界
 │   ├── baseline-reproduction.md    # 真实复现证据

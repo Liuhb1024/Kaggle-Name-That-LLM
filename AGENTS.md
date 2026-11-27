@@ -15,3 +15,5 @@
 - 每次运行使用新的产物目录，拒绝覆盖历史结果。失败目录没有 completed.json；不得把部分结果当完成。
 - `docs/research/2026-11-15/snapshot/` 是冻结的前置调研，禁止编辑或重新计算其 manifest。当前工作改根文档，发现旧结论变化时新增有来源的说明。
 - 完成前执行 `uv run --offline --locked python scripts/check_repository.py`、Notebook `--check`、项目测试与静态检查、`git diff --check`。Kaggle 镜像/隐藏测试未经实际运行时不能声称通过。
+
+2026-11-28 用户确认 A1 阶段。官方 baseline 继续独立维护。允许在独立的 ntl_member 路径上使用 Qwen3-8B-Base 与经审计的既有公开数据训练 q8pool，首个候选只替换完整 V31 的 q8v5。禁止模仿标注与自生成训练文本。按 prompt_id 评估，公开报告披露上游数据选择偏差。参数及门槛预先登记。Opus review 和修订后推送，每次正式提交前核对额度并取得用户确认。
