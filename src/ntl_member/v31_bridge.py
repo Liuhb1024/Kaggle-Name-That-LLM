@@ -9,10 +9,12 @@ import re
 import tempfile
 from pathlib import Path
 from typing import Any
-from urllib.request import urlopen
+from urllib.request import Request, urlopen
 
 from ntl_baseline.artifacts import write_json_new
 from ntl_baseline.data import file_sha256
+
+from .sources import PUBLIC_HEADERS
 
 SOURCE_URL = "https://www.kaggle.com/kernels/scriptcontent/372363760/download"
 SOURCE_SHA256 = "1556c5110b52c917144cd961610f2fc6fd803d4c3982b4e6d2e977273eb9038d"
@@ -25,7 +27,7 @@ def obtain_source(dest: Path) -> Path:
     if not dest.exists():
         dest.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
         with tempfile.NamedTemporaryFile(dir=dest.parent) as tmp:
-            with urlopen(SOURCE_URL, timeout=90) as stream:
+            with urlopen(Request(SOURCE_URL, headers=PUBLIC_HEADERS), timeout=90) as stream:
                 if not stream.geturl().startswith("https://"):
                     raise ValueError("Insecure source redirect")
                 payload = stream.read(16 * 1024**2 + 1)
@@ -200,7 +202,8 @@ LAYERS = {LAYERS!r}
 {inspect.getsource(read_manifest)}
 {inspect.getsource(verify_manifest)}
 # Fixed Kaggle attachment: {handle}/versions/{version}
-roots = [Path("/kaggle/input/{slug}"), Path("/kaggle/input/datasets/{owner}/{slug}")]
+roots = [Path("/kaggle/input/{slug}"), Path("/kaggle/input/datasets/{owner}/{slug}"),
+         Path("/kaggle/input/datasets/{owner}/{slug}/versions/{version}")]
 roots = {{p.resolve() for p in roots if (p / "MANIFEST.json").is_file()}}
 if len(roots) != 1:
     raise ValueError("Expected one fixed q8pool package mount")

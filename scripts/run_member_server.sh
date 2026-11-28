@@ -61,5 +61,6 @@ if [[ -z "$uv_bin" ]]; then
   fi
   uv_bin="$tools_venv/bin/uv"
 fi
+export UV_PROJECT_ENVIRONMENT="$PWD/artifacts/member-cpu-venv"
 "$uv_bin" sync --locked --no-dev
 exec "$uv_bin" run --offline --locked --no-dev python -m ntl_member.pipeline --python "$gpu_python" "${args[@]}"

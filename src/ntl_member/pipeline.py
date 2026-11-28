@@ -21,7 +21,7 @@ from ntl_baseline.artifacts import directory_hashes, write_json_new
 from ntl_baseline.constants import ContractError
 from ntl_baseline.data import file_sha256
 
-from .config import DEFAULT_CONFIG, ROOT, load
+from .config import DEFAULT_CONFIG, ROOT, load, source_lock_path
 from .plan import NAMES, print_plan
 from .stages import env_versions, read, reusable_data_training
 
@@ -123,7 +123,12 @@ def reuse_signature(stage: str, cfg: dict[str, Any], paths: dict[str, Path]) -> 
         "implementation": code,
         "file_pins": cfg["pins"],
         "filters": cfg["filters"],
-        "source_lock_sha256": file_sha256(Path(locked)) if locked else None,
+        "source_lock_sha256": file_sha256(source_lock_path(cfg)) if locked else None,
+        "retained_sources_sha256": (
+            file_sha256(source_lock_path(cfg).with_name("retained_sources.json"))
+            if locked
+            else None
+        ),
         "environment": inputs["gpu_versions"],
         "seed": cfg["seed"],
     }
@@ -165,6 +170,15 @@ def install_reports(source: Path, target: Path) -> None:
         staging.rename(target)
 
 
+def recheck_sources(cfg: dict[str, Any], root: Path) -> None:
+    from .sources import check_live
+
+    check_dir = Path(tempfile.mkdtemp(prefix="compliance-", dir=root))
+    report = check_dir / "source_status_live.json"
+    log(root, f"Rechecking contributing sources; report {report}")
+    check_live(cfg, report)
+
+
 def execute(args: argparse.Namespace, root: Path, lock_fd: int | None = None) -> None:
     cfg = load()
     base = ROOT / "artifacts/v31-asset-cache/models/qwen-lm/qwen-3/Transformers/8b-base/1"
@@ -204,6 +218,8 @@ def execute(args: argparse.Namespace, root: Path, lock_fd: int | None = None) ->
         if completed:
             attempt = completed
             output = verified_stage(attempt, signature)
+            if stage == "02":
+                recheck_sources(cfg, root)
             log(root, f"{stage} {name} verified; using completed stage")
         else:
             attempt = (
@@ -232,6 +248,8 @@ def execute(args: argparse.Namespace, root: Path, lock_fd: int | None = None) ->
                     if source is None:
                         raise ContractError("requested source stage was never completed")
                     output = verified_stage(source, signature)
+                    if stage == "02":
+                        recheck_sources(cfg, root)
                     write_json_new(attempt / "resources.json", resource_record(source))
                     extra = {"reference": str(output)}
                 else:

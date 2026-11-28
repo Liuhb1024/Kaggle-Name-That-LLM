@@ -14,7 +14,8 @@ import pandas as pd
 from ntl_baseline.artifacts import write_json_new, write_parquet_new
 from ntl_baseline.constants import LABELS, ContractError
 
-from .sources import EXTRA, OPEN_POOL, check_lock
+from .config import source_lock_path
+from .sources import EXTRA, OPEN_POOL, check_lock, retained_sources
 
 FORMAT = re.compile(
     r"(?:\n\s*\n)|(?:^|\n)\s*(?:#{1,6}\s|[-*+]\s|\d+[.)]\s)|```|https?://|"
@@ -397,7 +398,11 @@ def _stats(group: pd.DataFrame) -> dict[str, Any]:
 def prepare(
     download_dir: Path, official_train: Path, output_dir: Path, config: dict[str, Any]
 ) -> dict[str, Any]:
-    lock = json.loads((download_dir / "source_lock.json").read_text())
+    lock_bytes = (download_dir / "source_lock.json").read_bytes()
+    pinned = config["pins"].get("source_lock")
+    if pinned and lock_bytes != source_lock_path(config).read_bytes():
+        raise ContractError("Downloaded source lock differs from approved bytes")
+    lock = json.loads(lock_bytes)
     check_lock(download_dir, lock)
     metadata = json.loads((download_dir / "source_metadata.json").read_text())
     frame, counts, total = classify_inputs(download_dir, metadata, config)
@@ -451,19 +456,16 @@ def prepare(
         },
     )
     protocols = pd.read_csv(download_dir / "source_protocol.csv", keep_default_na=False)
-    write_json_new(
-        audit / "per_source.json",
-        {
-            ref: {
-                **metadata[ref],
-                "discarded": dict(counts[ref]),
-                "spot_check": checks.get(ref),
-                "protocol": protocol_evidence(rec),
-            }
-            for rec in protocols.to_dict("records")
-            for ref in [rec["source_dataset"]]
-        },
-    )
+    details = {
+        rec["source_dataset"]: {
+            **metadata[rec["source_dataset"]],
+            "discarded": dict(counts[rec["source_dataset"]]),
+            "spot_check": checks.get(rec["source_dataset"]),
+            "protocol": protocol_evidence(rec),
+        }
+        for rec in protocols.to_dict("records")
+    }
+    write_json_new(audit / "per_source.json", details)
     removed = sum(sum(n.values()) for n in counts.values())
     filtered = removed - conflicts - duplicates - int(hits.sum())
     if len(clean) + removed != total:
@@ -490,14 +492,29 @@ def prepare(
         },
     )
     write_json_new(audit / "gaps.json", gate)
+    source_counts = clean.source_dataset.value_counts().to_dict()
+    if pinned and set(source_counts) != retained_sources(source_lock_path(config)):
+        raise ContractError("Actual contributing sources differ from reviewed compliance coverage")
     summary = {
         "per_class": {k: int(per_class.get(k, 0)) for k in LABELS},
         "tiers": clean.tier.value_counts().to_dict(),
-        "source_counts": clean.source_dataset.value_counts().to_dict(),
+        "source_counts": source_counts,
+        "excluded_sources": {
+            ref: {
+                "raw_license": detail.get("raw_license", ""),
+                "f7_rows": detail["discarded"].get("F7", 0),
+                "protocol_reason": "none"
+                if detail["protocol"]["allowed"]
+                else "rewrite_or_style_transfer",
+            }
+            for ref, detail in details.items()
+            if ref not in source_counts
+        },
         "gaps": gate["gaps"],
     }
     write_json_new(output_dir / "audit_summary.json", summary)
-    write_json_new(output_dir / "source_lock.json", lock)
+    with (output_dir / "source_lock.json").open("xb") as stream:
+        stream.write(lock_bytes)
     with (audit / "NOTICE.md").open("x") as notice:
         notice.write("# External data attribution\n\n")
         for ref in sorted(set(clean.source_dataset) | {OPEN_POOL, EXTRA}):

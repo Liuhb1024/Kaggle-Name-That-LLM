@@ -17,6 +17,14 @@ from ntl_baseline.artifacts import write_json_new
 from ntl_baseline.constants import ContractError
 from ntl_baseline.data import file_sha256
 
+from .config import source_lock_path
+
+PUBLIC_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (NTL public-source audit)",
+    "Accept": "application/json",
+}
+SNAPSHOTS = ("source_metadata.json", "spot_plan.json")
+
 OPEN_POOL = "crtproduction/name-that-llm-open-pool"
 EXTRA = "seyitkaangunes/ntl-extra-api-passages"
 PINNED = {
@@ -71,13 +79,7 @@ def safe_filename(name: str) -> str:
 
 def _request(url: str) -> dict[str, Any]:
     # No Kaggle tokens, cookies, netrc, or Authorization headers are used by urllib.
-    request = Request(
-        url,
-        headers={
-            "User-Agent": "Mozilla/5.0 (NTL public-source audit)",
-            "Accept": "application/json",
-        },
-    )
+    request = Request(url, headers=PUBLIC_HEADERS)
     for attempt in range(3):
         try:
             with urlopen(request, timeout=25) as response:
@@ -85,9 +87,9 @@ def _request(url: str) -> dict[str, Any]:
                     raise ContractError("Unexpected metadata redirect")
                 return json.load(response)
         except HTTPError as exc:
-            if exc.code in (401, 403, 404):
+            if exc.code in (401, 403) or (exc.code == 404 and attempt == 2):
                 return {"ref": url.split("/view/")[-1], "isPrivate": True}
-            if exc.code != 429 and exc.code < 500:
+            if exc.code not in (404, 429) and exc.code < 500:
                 raise
         except (TimeoutError, URLError):
             pass
@@ -102,18 +104,25 @@ def public_metadata(
     if not HANDLE.fullmatch(ref):
         raise ContractError("Invalid Kaggle dataset handle")
     result = request("https://www.kaggle.com/api/v1/datasets/view/" + ref)
-    if result.get("ref") != ref or not isinstance(result.get("isPrivate"), bool):
+    if (
+        not isinstance(result, dict)
+        or result.get("ref") != ref
+        or not isinstance(result.get("isPrivate"), bool)
+    ):
         raise ContractError(f"Cannot verify source identity or visibility for {ref}")
     if result["isPrivate"]:
         return {"public": False, "license": "", "version": None, "last_updated": ""}
     version = result.get("currentVersionNumber")
     if type(version) is not int or version < 1:
         raise ContractError(f"Cannot verify current source version for {ref}")
+    raw_license = result.get("licenseName") or ""
+    if not isinstance(raw_license, str):
+        raise ContractError(f"Invalid license field for {ref}")
     return {
         "public": True,
         "version": version,
-        "license": normalize_license(result.get("licenseName") or ""),
-        "raw_license": result.get("licenseName") or "",
+        "license": normalize_license(raw_license),
+        "raw_license": raw_license,
         "last_updated": str(result.get("lastUpdated") or "")[:10],
     }
 
@@ -141,6 +150,79 @@ def download_file(ref: str, version: int, filename: str, output: Path) -> None:
         shutil.copyfileobj(stream, destination)
 
 
+def retained_sources(lock_path: Path) -> set[str]:
+    refs = json.loads(lock_path.with_name("retained_sources.json").read_bytes())
+    if (
+        not isinstance(refs, list)
+        or not refs
+        or not all(isinstance(ref, str) and HANDLE.fullmatch(ref) for ref in refs)
+        or len(set(refs)) != len(refs)
+    ):
+        raise ContractError("Invalid reviewed retained-source list")
+    return set(refs)
+
+
+def check_live(config: dict[str, Any], report: Path) -> None:
+    lock_path = source_lock_path(config)
+    lock = json.loads(lock_path.read_bytes())
+    check_lock(lock_path.parent, {"files": {name: lock["files"][name] for name in SNAPSHOTS}})
+    frozen = json.loads(lock_path.with_name("source_metadata.json").read_bytes())
+    contributors = retained_sources(lock_path)
+    if not contributors <= frozen.keys():
+        raise ContractError("Retained source missing from reviewed metadata")
+
+    def observe(ref: str) -> dict[str, Any]:
+        try:
+            info = public_metadata(ref)
+        except (OSError, ValueError) as exc:
+            return {"status": "unverified", "error_type": type(exc).__name__}
+        return {**info, "changed_fields": sorted(k for k in info if info[k] != frozen[ref].get(k))}
+
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        live = dict(zip(frozen, executor.map(observe, frozen), strict=True))
+    write_json_new(report, live)
+    for ref in sorted(contributors):
+        record = live[ref]
+        if record.get("status") == "unverified":
+            raise ContractError(f"Cannot verify contributing source: {ref}")
+        if not record["public"] or record["license"] not in config["filters"]["allowed_licenses"]:
+            raise ContractError(f"Contributing source private or license disallowed: {ref}")
+
+
+def replay(output: Path, config: dict[str, Any]) -> dict[str, Any]:
+    path = source_lock_path(config)
+    pinned_bytes = path.read_bytes()
+    lock = json.loads(pinned_bytes)
+    check_live(config, output / "source_status_live.json")
+    if lock["versions"] != {OPEN_POOL: 19, EXTRA: 2}:
+        raise ContractError("Unexpected main dataset versions in source lock")
+    for name, record in lock["files"].items():
+        dest = output / safe_filename(name)
+        if name in SNAPSHOTS:
+            with dest.open("xb") as stream:
+                stream.write((path.parent / name).read_bytes())
+        else:
+            ref, version = record["dataset"], record["version"]
+            if name in PINNED:
+                if (ref, version, record["bytes"], record["sha256"]) != PINNED[name]:
+                    raise ContractError(f"Main source lock mismatch: {name}")
+                filename = name
+            else:
+                prefix = f"spot/{ref}/"
+                if not name.startswith(prefix):
+                    raise ContractError(f"Unexpected spot filename in source lock: {name}")
+                filename = safe_filename(name[len(prefix) :])
+            download_file(ref, version, filename, dest)
+    check_lock(output, lock)
+    with (output / "source_lock.json").open("xb") as stream:
+        stream.write(pinned_bytes)
+    return {
+        "datasets": len(json.loads((output / "source_metadata.json").read_bytes())),
+        "spot_sources": len(json.loads((output / "spot_plan.json").read_bytes())["sources"]),
+        "files": len(lock["files"]),
+    }
+
+
 def download(output_dir: Path, config: dict[str, Any]) -> dict[str, Any]:
     from .pool import classify_inputs, spot_plan
 
@@ -150,6 +232,9 @@ def download(output_dir: Path, config: dict[str, Any]) -> dict[str, Any]:
     ):
         raise ContractError("Data handles differ from the reviewed versions")
     output_dir.mkdir(parents=True, exist_ok=True)
+    if config["pins"].get("source_lock"):
+        return replay(output_dir, config)
+    # Initial audit only. The server configuration always specifies the reviewed lock.
     files: dict[str, Any] = {}
     metadata = {ref: public_metadata(ref) for ref in versions}
     for ref, info in metadata.items():
@@ -198,14 +283,5 @@ def download(output_dir: Path, config: dict[str, Any]) -> dict[str, Any]:
         path = output_dir / name
         files[name] = {"bytes": path.stat().st_size, "sha256": file_sha256(path)}
     lock = {"files": dict(sorted(files.items())), "versions": versions}
-    previous = config["pins"].get("source_lock", "")
-    if previous:
-        pinned_bytes = Path(previous).read_bytes()
-        if json.loads(pinned_bytes) != lock:
-            raise ContractError("Pinned source lock differs from current acquisition")
-        # All downstream provenance uses the exact bytes of the approved manifest.
-        with (output_dir / "source_lock.json").open("xb") as destination:
-            destination.write(pinned_bytes)
-    else:
-        write_json_new(output_dir / "source_lock.json", lock)
+    write_json_new(output_dir / "source_lock.json", lock)
     return {"datasets": len(metadata), "spot_sources": len(plan), "files": len(files)}

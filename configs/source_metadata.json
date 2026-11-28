@@ -1,0 +1,499 @@
+{
+  "abdullah1afify/ntl-generations": {
+    "public": true,
+    "version": 11,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-11-04"
+  },
+  "abhinavsaipodugu/ntl-proxy-gpt-gemini-passages": {
+    "public": true,
+    "version": 10,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-10-26"
+  },
+  "adurey/ntl-proxy-gen-20261031": {
+    "public": true,
+    "version": 7,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-11-10"
+  },
+  "aitahmednasser/ntl-kaggle-ai-gen": {
+    "public": true,
+    "version": 1,
+    "license": "CC0 1.0",
+    "raw_license": "CC0: Public Domain",
+    "last_updated": "2026-11-11"
+  },
+  "alessandrolair/ntl-kaggle-benchmarks-generated-passages": {
+    "public": true,
+    "version": 1,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-10-27"
+  },
+  "alperen5252525/ntl-public-passage-pool-v1": {
+    "public": true,
+    "version": 1,
+    "license": "CC BY-SA 4.0",
+    "raw_license": "CC BY-SA 4.0",
+    "last_updated": "2026-10-19"
+  },
+  "alperen5252525/ntl-vertex-gemini-proxy-gpt-generations": {
+    "public": true,
+    "version": 2,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-10-18"
+  },
+  "aniruduh9/ntl-hard-supplement": {
+    "public": true,
+    "version": 4,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-11-04"
+  },
+  "ankiteshtiwari/ntl-blocks-v1": {
+    "public": true,
+    "version": 3,
+    "license": "CC0 1.0",
+    "raw_license": "CC0: Public Domain",
+    "last_updated": "2026-11-23"
+  },
+  "arxitekton/ntl-claude-gen-v1": {
+    "public": true,
+    "version": 1,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-10-20"
+  },
+  "arxitekton/ntl-claude-gen-v2": {
+    "public": true,
+    "version": 1,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-10-20"
+  },
+  "asiralabi/ntl-src": {
+    "public": true,
+    "version": 6,
+    "license": "CC BY-SA 4.0",
+    "raw_license": "CC BY-SA 4.0",
+    "last_updated": "2026-10-23"
+  },
+  "aswathvanan/ntl-proxy-passages": {
+    "public": true,
+    "version": 7,
+    "license": "CC BY-SA 4.0",
+    "raw_license": "CC BY-SA 4.0",
+    "last_updated": "2026-10-30"
+  },
+  "beroli/ntl-benchmark-c1-generated-panels": {
+    "public": true,
+    "version": 1,
+    "license": "CC0 1.0",
+    "raw_license": "CC0: Public Domain",
+    "last_updated": "2026-11-22"
+  },
+  "beroli/ntl-benchmark-c2-generated-panels": {
+    "public": true,
+    "version": 1,
+    "license": "CC0 1.0",
+    "raw_license": "CC0: Public Domain",
+    "last_updated": "2026-11-22"
+  },
+  "bingli283/ntl-gen-pilot-v1": {
+    "public": true,
+    "version": 3,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-10-21"
+  },
+  "carlosoponce/ntl-own-proxy-passages": {
+    "public": true,
+    "version": 1,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-10-29"
+  },
+  "chosunghwan/ntl-gemini-new-prompts": {
+    "public": true,
+    "version": 1,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-10-21"
+  },
+  "crtproduction/name-that-llm-open-pool": {
+    "public": true,
+    "version": 19,
+    "license": "CC BY-SA 4.0",
+    "raw_license": "CC BY-SA 4.0",
+    "last_updated": "2026-11-25"
+  },
+  "danielandresmiranda/ntl-openrouter-glm-kimi": {
+    "public": true,
+    "version": 1,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-10-22"
+  },
+  "darragh1walsh/ntl-kaggle-ai-gen-run-1": {
+    "public": true,
+    "version": 8,
+    "license": "CC0 1.0",
+    "raw_license": "CC0: Public Domain",
+    "last_updated": "2026-11-08"
+  },
+  "davidpiln/ntl-vertex-gemini-gen": {
+    "public": true,
+    "version": 2,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-10-28"
+  },
+  "dedruck/ntl-proxy-gen": {
+    "public": true,
+    "version": 4,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-10-24"
+  },
+  "dhananjayk2609/ntl-panel-gap-passages-kaggle-benchmarks": {
+    "public": true,
+    "version": 5,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-11-14"
+  },
+  "dominicjamil/ntl-pools": {
+    "public": true,
+    "version": 2,
+    "license": "CC0 1.0",
+    "raw_license": "CC0: Public Domain",
+    "last_updated": "2026-10-25"
+  },
+  "dophuchung/ntl-proxy-generations": {
+    "public": true,
+    "version": 1,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-10-17"
+  },
+  "drjcfmd/ntl-generated-v2": {
+    "public": true,
+    "version": 4,
+    "license": "CC BY-SA 4.0",
+    "raw_license": "CC BY-SA 4.0",
+    "last_updated": "2026-10-24"
+  },
+  "earthmaker/ntl-own-prompt-generations": {
+    "public": true,
+    "version": 1,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-10-22"
+  },
+  "elliotthankinson/ntl-exact-gens-v3": {
+    "public": true,
+    "version": 7,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-10-30"
+  },
+  "elliotthankinson/ntl-tells-v4": {
+    "public": true,
+    "version": 2,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-11-17"
+  },
+  "haileycheng/name-that-llm-same-prompt-passages": {
+    "public": true,
+    "version": 2,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-10-18"
+  },
+  "hansamaqht/name-that-llm-glm-extra": {
+    "public": true,
+    "version": 1,
+    "license": "CC0 1.0",
+    "raw_license": "CC0: Public Domain",
+    "last_updated": "2026-10-25"
+  },
+  "harshitkmr/ntl-google-gen-v1": {
+    "public": true,
+    "version": 1,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-10-24"
+  },
+  "illiadolenko/ntl-generated-corpus-v1": {
+    "public": true,
+    "version": 37,
+    "license": "CC0 1.0",
+    "raw_license": "CC0: Public Domain",
+    "last_updated": "2026-10-24"
+  },
+  "jadkutbi/ntl-own-proxy-generations": {
+    "public": true,
+    "version": 4,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-10-27"
+  },
+  "kaplinskiy/ntl-gpt-proxy-passages": {
+    "public": true,
+    "version": 1,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-10-17"
+  },
+  "kenandemirci/ntl-glm-gemini-generations": {
+    "public": true,
+    "version": 7,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-10-23"
+  },
+  "keshavatearth/ntl-gpt-new-prompts-v1": {
+    "public": true,
+    "version": 1,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-10-17"
+  },
+  "kilupy/ntl-18-model-corpus": {
+    "public": true,
+    "version": 1,
+    "license": "",
+    "raw_license": "Unknown",
+    "last_updated": "2026-11-02"
+  },
+  "kilupy/ntl-claude-family-passages": {
+    "public": true,
+    "version": 2,
+    "license": "",
+    "raw_license": "Unknown",
+    "last_updated": "2026-11-02"
+  },
+  "lucasboesen/ntl-free-proxy-generations": {
+    "public": true,
+    "version": 12,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-11-01"
+  },
+  "lxdlxdlxd/ntl-synth-generations-v1": {
+    "public": true,
+    "version": 1,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-10-17"
+  },
+  "mathleteutd/ntl-12-model-proxy-passages": {
+    "public": true,
+    "version": 2,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-10-28"
+  },
+  "michaelsemenoff/ntl-own-extra-v1": {
+    "public": true,
+    "version": 1,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-10-17"
+  },
+  "michaelsemenoff/ntl-pool-v3": {
+    "public": true,
+    "version": 1,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-10-22"
+  },
+  "mrralphie/ntl-pool-b2m": {
+    "public": true,
+    "version": 1,
+    "license": "CC BY-SA 4.0",
+    "raw_license": "CC BY-SA 4.0",
+    "last_updated": "2026-10-22"
+  },
+  "nimithashreea/ntl-proxy-candidate-generations-20261110": {
+    "public": true,
+    "version": 2,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-11-10"
+  },
+  "nuridudak/ntl-130k-clean-passages": {
+    "public": true,
+    "version": 2,
+    "license": "CC BY-SA 4.0",
+    "raw_license": "CC BY-SA 4.0",
+    "last_updated": "2026-10-23"
+  },
+  "pardheev/ntl-proxy-extra-passages": {
+    "public": true,
+    "version": 2,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-10-21"
+  },
+  "parkjinsu1/ntl-kb-proxy-panels": {
+    "public": true,
+    "version": 7,
+    "license": "CC BY-SA 4.0",
+    "raw_license": "CC BY-SA 4.0",
+    "last_updated": "2026-11-08"
+  },
+  "philipvallen/ntl-pools": {
+    "public": true,
+    "version": 4,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-10-24"
+  },
+  "prvsiyan/ntl-own-prompt-generations-v1": {
+    "public": true,
+    "version": 1,
+    "license": "CC BY-SA 4.0",
+    "raw_license": "CC BY-SA 4.0",
+    "last_updated": "2026-10-16"
+  },
+  "prvsiyan/prvsiyans-extended-name-that-llm-dataset": {
+    "public": true,
+    "version": 13,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-11-11"
+  },
+  "rainycloudss/ntl-free-proxy-fresh-prompts": {
+    "public": true,
+    "version": 1,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-10-24"
+  },
+  "seyitkaangunes/ntl-extra-api-passages": {
+    "public": true,
+    "version": 2,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-10-16"
+  },
+  "simonrba/ntl-pool-extra": {
+    "public": true,
+    "version": 3,
+    "license": "CC BY-SA 4.0",
+    "raw_license": "CC BY-SA 4.0",
+    "last_updated": "2026-10-21"
+  },
+  "swaroopmeher/ntl-public-data-sub1020": {
+    "public": true,
+    "version": 1,
+    "license": "CC BY-SA 4.0",
+    "raw_license": "CC BY-SA 4.0",
+    "last_updated": "2026-10-21"
+  },
+  "tadeuhayashida/ntl-claude-fable-5-generations": {
+    "public": true,
+    "version": 1,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-10-20"
+  },
+  "tadeuhayashida/ntl-gen003-claude-panel": {
+    "public": true,
+    "version": 1,
+    "license": "CC BY-SA 4.0",
+    "raw_license": "CC BY-SA 4.0",
+    "last_updated": "2026-11-22"
+  },
+  "tamerlanomralinov/ntl-matched-bench-gen-r1": {
+    "public": true,
+    "version": 1,
+    "license": "CC0 1.0",
+    "raw_license": "CC0: Public Domain",
+    "last_updated": "2026-11-13"
+  },
+  "toanplam/ntl-fresh-generation-pilot-nov08": {
+    "public": true,
+    "version": 1,
+    "license": "CC0 1.0",
+    "raw_license": "CC0: Public Domain",
+    "last_updated": "2026-11-08"
+  },
+  "trnhip/ntl-api-gen": {
+    "public": true,
+    "version": 6,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-10-23"
+  },
+  "trnhip/ntl-proxy-gen": {
+    "public": true,
+    "version": 3,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-10-21"
+  },
+  "vbandaru/ntl-extra-passages-w05": {
+    "public": true,
+    "version": 1,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-10-24"
+  },
+  "vidhikishorwaghela/ntl-own-proxy-generations": {
+    "public": true,
+    "version": 2,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-10-24"
+  },
+  "willrice/name-that-llm-openrouter-harvest": {
+    "public": true,
+    "version": 5,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-10-18"
+  },
+  "yutoab/ntl-free-proxy-thin-labels": {
+    "public": true,
+    "version": 3,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-10-26"
+  },
+  "zbigniewkirchner/ntl-extra-gpt-passages": {
+    "public": true,
+    "version": 3,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-11-03"
+  },
+  "zeminglii/ntl-own-exact-route-generations": {
+    "public": true,
+    "version": 2,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-11-03"
+  },
+  "zitaoxu2002/ntl-proxy-passages-pre-ruling": {
+    "public": true,
+    "version": 1,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-10-29"
+  },
+  "ziyuzhou1207/ntl-zz-proxy-generations": {
+    "public": true,
+    "version": 1,
+    "license": "CC BY 4.0",
+    "raw_license": "Attribution 4.0 International (CC BY 4.0)",
+    "last_updated": "2026-10-18"
+  }
+}

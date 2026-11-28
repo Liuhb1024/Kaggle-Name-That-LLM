@@ -98,7 +98,7 @@ Kaggle 的规则、讨论区、榜单、提交页都需要登录才能渲染，�
 | 比赛数据 | 服务器 `data/raw/name-that-llm/` | 用 `source.json` 中的 train.csv 摘要复核 |
 | 折映射 | `ntl_baseline.baseline.make_folds`（GroupKFold 5 折，shuffle=False） | 按 id 排序后 `id,fold\n` 文本的 SHA-256 等于 `ff3453131989daf2379816eef5ed02086ec0a6488e20815d0bd2ef35c1c40193` |
 | 底座 | Kaggle `qwen-lm/qwen-3/transformers/8b-base/1`；服务器缓存 `artifacts/v31-asset-cache/models/qwen-lm/qwen-3/Transformers/8b-base/1` | config 和 index 按 `configs/v31_single_gpu.toml` 中的摘要；分片按已记录的摘要 |
-| Open Pool | `crtproduction/name-that-llm-open-pool` 第 19 版（2026-11-25；`ntl_open_pool.parquet` 119,227,255 字节） | 首次下载时写入 `source_lock.json`，之后严格比对。数据集描述里有 238,750 和 223,840 两个行数，以实际文件为准并记录 |
+| Open Pool | `crtproduction/name-that-llm-open-pool` 第 19 版（2026-11-25；`ntl_open_pool.parquet` 119,227,255 字节） | 从已评审的来源锁读取版本、长度和 SHA-256。数据集描述里有 238,750 和 223,840 两个行数，以实际文件为准并记录 |
 | Extra API Passages | `seyitkaangunes/ntl-extra-api-passages` 第 2 版（`ntl_extra_passages_claude.csv` 4,387,162 字节） | 同上 |
 | V31 源码 | `https://www.kaggle.com/kernels/scriptcontent/372363760/download` | SHA-256 `1556c5110b52c917144cd961610f2fc6fd803d4c3982b4e6d2e977273eb9038d` |
 | Kaggle 复跑副本 | `huabi1024/name-that-llm-full-v31-reproduction` 版本 374825819 | 逐项记录挂接输入的版本，补丁版不得更新这些输入 |
@@ -117,7 +117,7 @@ base_handle = "qwen-lm/qwen-3/Transformers/8b-base/1"
 open_pool = "crtproduction/name-that-llm-open-pool/versions/19"
 extra_api = "seyitkaangunes/ntl-extra-api-passages/versions/2"
 folds_digest = "ff3453131989daf2379816eef5ed02086ec0a6488e20815d0bd2ef35c1c40193"
-source_lock = ""        # 首跑后填 reports/member-q8pool-v1/source_lock.json
+source_lock = "configs/member_q8pool_sources_v1.json"
 
 [filters]
 min_words = 36
@@ -264,7 +264,7 @@ batch_size = 16
 - **F8**：同一段规范化文本带多个标签，全部排除。
 - **F9**：与任一官方段落的字符 3–5 gram TF-IDF 余弦 ≥ 0.80，排除。向量化器只在官方行上拟合。
 - **F10**：与任一官方 prompt 质心的词级 TF-IDF 余弦 ≥ 0.50，排除。质心是该题 18 段向量的均值，去掉英文停用词。
-- **F11**：如果某个标签的官方行里某排版标记出现不超过 1 次（em dash、空格 em dash、弯撇号、弯双引号），池里同标签带该标记的行排除。这条规则用到了全部官方行的统计，记为已知的轻微乐观偏差。
+- **F11**：记录每个标签的官方排版标记统计（em dash、空格 em dash、弯撇号、弯双引号），仅用于审计。
 - **F12**：来源抽查不合格，整源排除。
 
 另外两点：
@@ -474,7 +474,9 @@ NOTICE.md                       # Qwen3-8B-Base 用 Apache 2.0；训练数据来
 ```bash
 cd ~/kaggle-name-that-llm-lhb/Kaggle-Name-That-LLM
 git fetch origin
-bash scripts/run_member_server.sh --commit <40位SHA> \
+commit='在此填入已评审的完整 SHA'
+git switch --detach "$commit"
+bash scripts/run_member_server.sh --commit "$commit" \
   --python ../.venv-gpu-check/bin/python \
   --run-root artifacts/member-q8pool-v1
 # 续跑：同一命令加 --resume；只看阶段计划：加 --dry-run
@@ -482,7 +484,7 @@ bash scripts/run_member_server.sh --commit <40位SHA> \
 
 脚本按以下步骤执行：
 
-1. 确认工作区干净（被忽略的文件除外），切到 `git switch --detach <SHA>`，再用 `git rev-parse HEAD` 核对。
+1. 调用方先切换到评审过的提交，脚本核对工作区与 HEAD。
 2. GPU 环境检查沿用 `scripts/run_v31_server_smoke.sh`：torch 2.12.1+cu126、恰好 1 张卡。只在缺包时按 `requirements-v31-gpu.txt` 安装一次，然后跑 `pip check`。
 3. CPU 阶段用 `uv run --offline --locked`，GPU 阶段用指定的 Python；`KAGGLEHUB_CACHE=artifacts/v31-asset-cache`，复用已有的底座缓存。
 4. 依次执行各阶段。冒烟通过后自动推进到报告阶段。任何门槛失败都停在该阶段，以非零退出，并打印续跑命令。
@@ -642,7 +644,7 @@ artifacts/member-q8pool-v1/
 ## 14. 风险与已知缺口
 
 - 社区成员的训练数据未知，C1 的增益只能在公榜上看到；单次差值在 0.010 以内无法解读。
-- F11 和 Open Pool 自身的排版过滤用到了全部官方行，OOF 会轻微偏乐观。S1 的"无泄漏"只是指训练没见过官方文本。
+- Open Pool 上游筛选用到了官方行，OOF 仍有选择偏差。S1 的"无泄漏"只是指训练没见过官方文本。
 - transformers 5.14.1 中第 24 层 hidden state 是否经过 final norm 未核实，由第 9.2 节的对齐测试兜底。
 - Kaggle 评分重跑的日志看不到，只能靠成员强制检查发现失败。
 - V31 依赖 39 个挂接别名，其中任何一个被作者改为私有，副本都可能失效（K0）。
@@ -728,3 +730,10 @@ artifacts/member-q8pool-v1/
 - [ ] 【Codex】在 Kaggle 新建版本，核对输入，完成保存运行，确认锚点预检通过。
 - [ ] 【用户】确认当日额度，批准提交 C1。
 - [ ] 【Codex】记录提交和分数，按第 12 节给出下一步；【Kiro】做第三轮 review。
+
+## 复审修订记录
+
+- 第 6 节 F11 采用审计口径。保留官方样本排版统计，F11 的统计不参与本地删行。上游筛选造成的选择偏差仍要披露。
+- 第 10.1 节由调用方先检出固定 SHA，入口脚本核对 HEAD。服务器 CPU 环境位于 `artifacts/member-cpu-venv`。
+- 阶段 02 重放仓库登记的来源锁、元数据和抽查计划。每次首跑、续跑或复用阶段 02 都复查贡献来源的公开性与许可。时间和版本变化在私有运行目录单独记录。
+- 阶段 10 发布阶段 03、05 的实际门槛状态。公开审计按来源列出零保留来源的原始许可、F7 行数和改写协议判定。

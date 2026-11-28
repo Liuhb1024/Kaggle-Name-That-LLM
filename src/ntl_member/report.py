@@ -9,6 +9,7 @@ from typing import Any
 from ntl_baseline.artifacts import write_json_new
 from ntl_baseline.constants import LABELS, ContractError
 
+from .sources import ALLOWED_LICENSE_NAMES
 from .v31_bridge import validate_manifest_entries
 
 SHA = re.compile(r"[0-9a-f]{64}")
@@ -90,7 +91,7 @@ def validate_public(name: str, value: Any) -> None:
             _number(v)
         _interval(value["delta_ci95"])
         _keys(value["gates"], {"data", "smoke", "s1", "s2", "parity"})
-        if any(v is not True for v in value["gates"].values()):
+        if any(v not in ("pass", "warning") for v in value["gates"].values()):
             raise ContractError("incomplete public report")
         for k, v in value["resources"].items():
             if not re.fullmatch(r"(?:00|01|02|03|04|05|06|07|08|09)", k):
@@ -126,11 +127,25 @@ def validate_public(name: str, value: Any) -> None:
                 raise ContractError("unknown package")
             _hash(v, VERSION)
     elif name == "audit_summary.json":
-        _keys(value, {"per_class", "tiers", "source_counts", "gaps"})
+        _keys(value, {"per_class", "tiers", "source_counts", "gaps", "excluded_sources"})
         _keys(value["per_class"], set(LABELS))
         for section, counts in value.items():
             if not isinstance(counts, dict):
                 raise ContractError("expected aggregate counts")
+            if section == "excluded_sources":
+                licenses = {"", "Unknown"}.union(*ALLOWED_LICENSE_NAMES.values())
+                for ref, detail in counts.items():
+                    _hash(ref, HANDLE)
+                    _keys(detail, {"raw_license", "f7_rows", "protocol_reason"})
+                    if (
+                        ref in value["source_counts"]
+                        or detail["raw_license"] not in licenses
+                        or type(detail["f7_rows"]) is not int
+                        or detail["f7_rows"] < 0
+                        or detail["protocol_reason"] not in ("none", "rewrite_or_style_transfer")
+                    ):
+                        raise ContractError("invalid public source exclusion")
+                continue
             for k, v in counts.items():
                 if section == "source_counts":
                     _hash(k, HANDLE)
@@ -197,6 +212,8 @@ def summary_markdown(summary: dict[str, Any]) -> str:
         "",
     ]
     lines.extend(f"- {key} {score:.5f}" for key, score in scores.items())
+    lines.extend(["", "## 阶段门槛", ""])
+    lines.extend(f"- {gate}: {status}" for gate, status in summary["gates"].items())
     return "\n".join(lines) + "\n"
 
 

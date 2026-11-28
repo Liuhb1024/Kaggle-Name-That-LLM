@@ -94,7 +94,14 @@ def preflight(cfg: dict[str, Any], data: Path, base: Path, out: Path) -> None:
     if fold_digest(frame) != cfg["pins"]["folds_digest"]:
         raise ContractError("official prompt folds mismatch")
     write_parquet_new(out / "folds.parquet", frame[["id", "fold"]])
-    src = obtain_source(ROOT / "artifacts/v31-asset-cache/v31_372363760.json")
+    cache = ROOT / "artifacts/v31-asset-cache/v31_372363760.json"
+    origin = "cache" if cache.exists() else "download"
+    src = obtain_source(cache)
+    print(
+        f"V31 source={origin} gpu_python={platform.python_version()} "
+        f"verified_sha256={file_sha256(src)}",
+        flush=True,
+    )
     shutil.copyfile(src, out / "source.json")
     write_json_new(
         out / "inputs.json",
@@ -366,6 +373,13 @@ def run(job: dict[str, Any]) -> None:
         d = evaluation["comparisons"]["S2_minus_C0"]
         scores = {k: v["balanced_accuracy"] for k, v in evaluation["arms"].items()}
         scores["S2_minus_C0"] = d["delta"]
+        data_status = read(paths["03"] / "audit/gaps.json")["status"]
+        s1 = read(paths["05"] / "s1.json")
+        ba = s1["balanced_accuracy"]
+        if not cfg["gates"]["s1_stop"] <= ba <= 1 or s1["warning"] is not (
+            ba < cfg["gates"]["s1_continue"]
+        ):
+            raise ContractError("S1 gate evidence disagrees with preregistered thresholds")
         summary = {
             "commit": job["commit"],
             "config_sha256": file_sha256(DEFAULT_CONFIG),
@@ -385,7 +399,13 @@ def run(job: dict[str, Any]) -> None:
                 for k, arm in evaluation["arms"].items()
             },
             "delta_ci95": d["ci95"],
-            "gates": dict.fromkeys(("data", "smoke", "s1", "s2", "parity"), True),
+            "gates": {
+                "data": data_status,
+                "smoke": "pass",
+                "s1": "warning" if s1["warning"] else "pass",
+                "s2": "pass",
+                "parity": "pass",
+            },
             "resources": job["resources"],
             "versions": read(paths["00"] / "inputs.json")["gpu_versions"],
         }

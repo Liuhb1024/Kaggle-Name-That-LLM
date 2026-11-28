@@ -31,7 +31,7 @@ cd ~/kaggle-name-that-llm-lhb/Kaggle-Name-That-LLM && (
 | 09 | S2 达 0.56、S2−C0 达 0.05 且区间下界大于 0.02 时，打包五折和全量的六个适配器。核对 V31 原程序与本地路径、fp16 与 bf16 的对齐 |
 | 10 | 导出聚合指标、配置和来源 SHA、成员文件清单、资源数据。根 completed.json 给出私有成员包及公开报告路径 |
 
-A1 的三个发布原件和抽查文件已在 [来源锁](../configs/member_q8pool_sources_v1.json) 固定。数据入口和许可口径见[数据说明](member-public-data.md)。如果数据许可、上游版本或抽查文件更新，先审查差异，使用新的实验版本记录决定。
+A1 的三个发布原件和抽查文件已在 [来源锁](../configs/member_q8pool_sources_v1.json) 固定。数据入口和许可口径见[数据说明](member-public-data.md)。上游发布新版时继续使用已锁定的文件；实际贡献来源变为私有或许可不再获准时停止。
 
 F9、F10 用官方文本及题组做跨数据集重合检查和隔离。F11 排版特征只作审计。Open Pool 发布者曾按官方样本筛选公开语料，因此 S1 和 OOF 均须披露上游选择偏差。C0 同折对照衡量整套两阶段配方的差异；两个训练臂的训练步数和学习率也有区别。官方 prompt_id 下的 centered 准确率与每题抽两条实验只作诊断。
 
@@ -71,3 +71,7 @@ PYTHONPATH=src .venv/bin/python scripts/build_v31_member_notebook.py \
 ```
 
 Kaggle 私有副本沿用完整 V31 的原挂接版本，再挂接锁定的成员资产。设置 T4 ×2、Internet 关闭，Save & Run All，核对锚点及 submission.parquet。确认当日额度后正式提交一次，把状态和实际公榜成绩写入[提交记录](worklog/submissions.md)。如果原版复跑失败或低于 0.705，先按规格 K0 排查。C2 留作后续预登记候选。
+
+阶段 00 的 `stage.log` 记录 GPU Python 版本、V31 源码来自下载还是缓存，以及通过校验的 SHA-256。五个底座权重分片的预期摘要来自开发机 11 月 23 日的 `v31-claude-local-20261123-121213/completed.json`，阶段 00 会逐个重算。服务器 CPU 依赖安装在 `artifacts/member-cpu-venv`。
+
+阶段 02 按仓库中的快照复现筛选和抽查。实时来源状态保存在本次运行的 `source_status_live.json`；复用阶段时看运行目录下新建的 `compliance-*/source_status_live.json`。报告中的 data 和 s1 会保留门槛警告；M5 可用 `audit_summary.json` 的 `excluded_sources` 核对整源排除的许可和行数。

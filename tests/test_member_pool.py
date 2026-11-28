@@ -145,11 +145,14 @@ def test_spot_check_missing_files_and_mismatch_count(tmp_path):
 
 def test_extra_and_pool_end_to_end_emit_only_aggregate_audit(tmp_path, monkeypatch):
     import json
+    import os
     import shutil
     from hashlib import sha256
     from pathlib import Path
 
     from ntl_member import pool, sources
+    from ntl_member.config import ROOT
+    from ntl_member.report import validate_public
 
     dataset = tmp_path / "fixtures"
     dataset.mkdir()
@@ -185,6 +188,11 @@ def test_extra_and_pool_end_to_end_emit_only_aggregate_audit(tmp_path, monkeypat
             }
         ]
     )
+    excluded = "owner/unlicensed"
+    df["model"] = "gemini-3.7-flash"
+    df["gen_served_model"] = "gemini-3.7-flash"
+    df["gen_date"] = ""
+    df = pd.concat([df, df.assign(source_dataset=excluded, text="Another simple passage")])
     df.to_parquet(dataset / "ntl_open_pool.parquet", index=False)
     pd.DataFrame(
         [{"text": "Different little words", "model": "claude-fable-5", "prompt_id": "zero"}]
@@ -196,17 +204,25 @@ def test_extra_and_pool_end_to_end_emit_only_aggregate_audit(tmp_path, monkeypat
         "route": "first_party_api",
         "served_model_check": "yes",
     }
-    pd.DataFrame([{**proto, "source_dataset": ref} for ref in [source, sources.EXTRA]]).to_csv(
-        dataset / "source_protocol.csv", index=False
-    )
+    pd.DataFrame(
+        [{**proto, "source_dataset": ref} for ref in [source, sources.EXTRA, excluded]]
+    ).to_csv(dataset / "source_protocol.csv", index=False)
     df.to_csv(dataset / "input.csv", index=False)
 
+    calls = []
+
     def download_file(ref: str, version: int, filename: str, output: Path):
+        calls.append((ref, version, filename))
         output.parent.mkdir(exist_ok=True, parents=True)
         shutil.copyfile(dataset / filename, output)
 
     def info(ref):
-        return {**INFO, "version": 2 if ref == sources.EXTRA else 1}
+        return {
+            **INFO,
+            "version": 2 if ref == sources.EXTRA else 1,
+            "raw_license": "" if ref == excluded else INFO["license"],
+            "license": "" if ref == excluded else INFO["license"],
+        }
 
     monkeypatch.setattr(sources, "download_file", download_file)
     monkeypatch.setattr(sources, "public_metadata", info)
@@ -231,19 +247,48 @@ def test_extra_and_pool_end_to_end_emit_only_aggregate_audit(tmp_path, monkeypat
     approved.write_text(
         json.dumps(json.loads((inputs / "source_lock.json").read_text()), indent=3, sort_keys=True)
     )
-    cfg["pins"]["source_lock"] = str(approved)
+    for name in ("source_metadata.json", "spot_plan.json"):
+        shutil.copyfile(inputs / name, tmp_path / name)
+    (tmp_path / "retained_sources.json").write_text(json.dumps([source, sources.EXTRA]))
+    cfg["pins"]["source_lock"] = os.path.relpath(approved, ROOT)
+    monkeypatch.chdir(dataset)
+    monkeypatch.setattr(
+        sources,
+        "public_metadata",
+        lambda ref: {
+            **info(ref),
+            "version": 99,
+            "last_updated": "2030-01-01",
+            "public": ref != excluded,
+        },
+    )
+    calls.clear()
     replay = tmp_path / "replay"
     sources.download(replay, cfg)
     assert (replay / "source_lock.json").read_bytes() == approved.read_bytes()
+    assert (source, 1, "input.csv") in calls and all(v != 99 for _, v, _ in calls)
+    live = json.loads((replay / "source_status_live.json").read_bytes())
+    assert live[source]["version"] == 99 and live[source]["last_updated"] == "2030-01-01"
     official = tmp_path / "official.csv"
     pd.DataFrame(
         {
             "text": ["alpha beta gamma", "delta epsilon zeta"],
             "prompt_id": [1, 2],
-            "model": ["claude-fable-5", LABEL],
+            "model": ["claude-fable-5", "gemini-3.7-flash"],
         }
     ).to_csv(official, index=False)
-    summary = pool.prepare(inputs, official, output, cfg)
+    before = pool.prepare(inputs, official, tmp_path / "before", {**cfg, "pins": {}})
+    summary = pool.prepare(replay, official, output, cfg)
+    assert (output / "source_lock.json").read_bytes() == approved.read_bytes()
+    assert before["source_counts"] == summary["source_counts"]
+    detail = json.loads((output / "audit/per_source.json").read_text())[excluded]
+    assert summary["excluded_sources"][excluded] == {
+        "raw_license": "",
+        "f7_rows": detail["discarded"]["F7"],
+        "protocol_reason": "none",
+    }
+    assert detail["discarded"]["F7"] == 1
+    validate_public("audit_summary.json", summary)
     assert summary["source_counts"] == {source: 1, sources.EXTRA: 1}
     assert pd.read_parquet(output / "stage1_sample.parquet").shape[0] == 2
     assert {source, sources.EXTRA} <= set(

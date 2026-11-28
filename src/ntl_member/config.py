@@ -58,6 +58,10 @@ def load(path: Path = DEFAULT_CONFIG) -> dict[str, Any]:
     return cfg
 
 
+def source_lock_path(config: dict[str, Any]) -> Path:
+    return ROOT / config["pins"]["source_lock"]
+
+
 def fold_digest(frame: Any) -> str:
     rows = frame.sort_values("id")[["id", "fold"]]
     return hashlib.sha256(

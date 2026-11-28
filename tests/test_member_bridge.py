@@ -74,12 +74,13 @@ def test_logged_runtime_rejects_missing_repeated_reordered_and_failed_members(tm
             bridge.check_members(malformed, adapters)
 
 
-def test_asset_cell_executes_hash_guard_with_a_mounted_fixture(tmp_path):
+@pytest.mark.parametrize("mount", ["member", "datasets/owner/member/versions/1"])
+def test_asset_cell_executes_hash_guard_with_a_mounted_fixture(tmp_path, mount):
     from ntl_baseline.artifacts import directory_hashes, write_json_new
     from ntl_baseline.data import file_sha256
 
-    dataset = tmp_path / "member"
-    dataset.mkdir()
+    dataset = tmp_path / mount
+    dataset.mkdir(parents=True)
     cfg = dict(keep=24, layers=bridge.LAYERS, max_len=384, eos_id=None, no_final_norm=False)
     for member in bridge.MEMBERS:
         root = dataset / member
@@ -123,3 +124,28 @@ def test_rejects_invalid_server_manifest_before_deployment(tmp_path):
     bad.write_text('{"../outside":{"bytes":3,"sha256":"deadbeef"}}')
     with pytest.raises(ValueError, match="file set"):
         bridge.read_manifest(bad)
+
+
+def test_v31_cold_download_sets_explicit_metadata_headers_and_checks_digest(tmp_path, monkeypatch):
+    import hashlib
+    import io
+
+    from ntl_member import v31_bridge as bridge
+
+    payload = b"test notebook"
+    dest = tmp_path / "source.json"
+
+    def serve(request, timeout):
+        assert request.full_url == bridge.SOURCE_URL
+        assert request.get_header("User-agent") == "Mozilla/5.0 (NTL public-source audit)"
+        assert request.get_header("Accept") == "application/json"
+        stream = io.BytesIO(payload)
+        stream.geturl = lambda: bridge.SOURCE_URL
+        return stream
+
+    monkeypatch.setattr(bridge, "urlopen", serve)
+    with pytest.raises(ValueError, match="SHA-256"):
+        bridge.obtain_source(dest)
+    assert not dest.exists()
+    monkeypatch.setattr(bridge, "SOURCE_SHA256", hashlib.sha256(payload).hexdigest())
+    assert bridge.obtain_source(dest).read_bytes() == payload

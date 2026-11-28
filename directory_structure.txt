@@ -9,6 +9,9 @@ artifacts/.gitkeep
 configs/baseline.json
 configs/member_q8pool_sources_v1.json
 configs/member_q8pool_v1.toml
+configs/retained_sources.json
+configs/source_metadata.json
+configs/spot_plan.json
 configs/v31_single_gpu.toml
 data/README.md
 data/raw/.gitkeep

@@ -1,0 +1,15 @@
+{
+  "sources": [
+    "drjcfmd/ntl-generated-v2",
+    "harshitkmr/ntl-google-gen-v1",
+    "trnhip/ntl-api-gen",
+    "abdullah1afify/ntl-generations",
+    "arxitekton/ntl-claude-gen-v1",
+    "seyitkaangunes/ntl-extra-api-passages",
+    "tadeuhayashida/ntl-gen003-claude-panel",
+    "lxdlxdlxd/ntl-synth-generations-v1",
+    "alperen5252525/ntl-vertex-gemini-proxy-gpt-generations",
+    "tadeuhayashida/ntl-claude-fable-5-generations"
+  ],
+  "missing": []
+}
