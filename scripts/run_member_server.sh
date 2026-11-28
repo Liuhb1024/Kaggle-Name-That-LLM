@@ -5,6 +5,11 @@ cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.."
 export PYTHONPATH="$PWD/src"
 export KAGGLEHUB_CACHE="$PWD/artifacts/v31-asset-cache"
 export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 PYTHONUNBUFFERED=1
+# NumPy 2.2's AVX2 argsort orders equal-sized prompt groups differently on the lab CPU.
+# Keep the preregistered GroupKFold assignment in both the CPU and GPU Python workers.
+if [[ "$(uname -m)" == x86_64 ]]; then
+  export NPY_DISABLE_CPU_FEATURES="${NPY_DISABLE_CPU_FEATURES:+$NPY_DISABLE_CPU_FEATURES,}AVX2"
+fi
 gpu_python=../.venv-gpu-check/bin/python
 args=("$@")
 want_commit=""

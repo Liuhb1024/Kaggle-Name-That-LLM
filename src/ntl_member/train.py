@@ -284,6 +284,7 @@ def fit(
             raise ValueError("checkpoint differs from configuration, inputs or batch plan")
     gpu = device.startswith("cuda")
     if gpu:
+        torch.cuda.init()
         torch.cuda.reset_peak_memory_stats(device)
     member = make_member(
         base,
